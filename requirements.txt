@@ -1,0 +1,2 @@
+python -c "import webview; import reportlab; print('Todo OK')"
+pip install pywebview reportlab

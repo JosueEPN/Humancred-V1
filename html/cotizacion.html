@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cotización — Humancred</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --vino:      #5A1116;
+      --vino-dark: #3d0d11;
+      --dorado:    #C9A782;
+      --beige:     #EADDCA;
+      --beige-bg:  #f7f3ed;
+      --gris-700:  #374151;
+      --gris-500:  #6b7280;
+      --gris-200:  #e5e7eb;
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 9.5pt;
+      color: #1a1a1a;
+      background: #e8e8e8;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .doc {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      margin: 20px auto;
+      padding: 14mm 16mm 12mm;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .doc-stripe {
+      height: 4px;
+      background: linear-gradient(90deg, var(--vino) 60%, var(--dorado));
+      margin: -14mm -16mm 10px;
+    }
+
+    /* ── Header ── */
+    .doc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid var(--beige);
+      margin-bottom: 12px;
+    }
+    .header-left    { display: flex; align-items: center; gap: 10px; }
+    .header-logo    { height: 52px; width: auto; }
+    .header-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .brand-name     { font-size: 18pt; font-weight: 800; color: var(--vino); letter-spacing: -0.02em; }
+    .brand-slogan   { font-size: 7.5pt; font-weight: 500; color: var(--gris-500); letter-spacing: 0.06em; text-transform: uppercase; }
+    .header-right   { text-align: right; }
+    .doc-title      { font-size: 13pt; font-weight: 800; color: var(--vino); letter-spacing: -0.01em; }
+    .doc-date       { font-size: 7.5pt; color: var(--gris-500); margin-top: 2px; }
+
+    /* ── Secciones ── */
+    .section        { margin-bottom: 10px; }
+    .section-title  {
+      font-size: 6.5pt; font-weight: 800; color: var(--vino);
+      text-transform: uppercase; letter-spacing: 0.12em;
+      background: var(--beige-bg); padding: 3.5px 8px;
+      border-left: 3px solid var(--vino);
+      border-bottom: 1px solid var(--beige); margin-bottom: 7px;
+    }
+
+    /* ── Info grid ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; }
+    .info-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .info-row   { display: flex; flex-direction: column; gap: 1px; }
+    .info-label { font-size: 6.5pt; font-weight: 700; color: var(--gris-500); text-transform: uppercase; letter-spacing: 0.06em; }
+    .info-value {
+      font-size: 9pt; font-weight: 600; color: #111;
+      border-bottom: 1px solid var(--gris-200);
+      padding-bottom: 2px; min-height: 16px;
+    }
+    .info-value.highlight { color: var(--vino); font-size: 10pt; font-weight: 700; }
+
+    /* ── Cuota banner ── */
+    .cuota-banner {
+      background: linear-gradient(135deg, var(--vino) 0%, var(--vino-dark) 100%);
+      border-radius: 6px; padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; position: relative; overflow: hidden;
+    }
+    .cuota-banner::after {
+      content: ''; position: absolute; right: -20px; top: -20px;
+      width: 90px; height: 90px; border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .cuota-banner-label  { font-size: 7pt; font-weight: 700; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.08em; }
+    .cuota-banner-valor  { font-size: 22pt; font-weight: 800; color: #fff; letter-spacing: -0.03em; line-height: 1; }
+    .cuota-banner-right  { text-align: right; }
+    .cuota-banner-detail { font-size: 7pt; color: rgba(255,255,255,0.65); margin-top: 1px; }
+
+    /* ── Tabla detalle ── */
+    .detail-grid { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid var(--gris-200); border-radius: 4px; overflow: hidden; }
+    .detail-grid tr { border-bottom: 1px solid var(--gris-200); }
+    .detail-grid tr:last-child { border-bottom: none; }
+    .detail-grid tr:nth-child(even) td { background: var(--beige-bg); }
+    .dg-label {
+      font-size: 7pt; font-weight: 700; color: var(--gris-500);
+      padding: 4.5px 8px; width: 22%; vertical-align: middle;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .dg-value {
+      font-size: 8.5pt; font-weight: 700; color: #111;
+      padding: 4.5px 10px; width: 28%; vertical-align: middle;
+      border-right: 1.5px solid var(--beige);
+    }
+    .dg-value:last-child { border-right: none; }
+    .dg-value.val-vino   { color: var(--vino); }
+    .dg-value.val-na     { color: var(--gris-500); font-style: italic; font-weight: 400; }
+
+    /* ── Requisitos ── */
+    .req-container {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 10px;
+    }
+    .req-box        { border: 1.5px solid var(--beige); border-radius: 5px; overflow: hidden; }
+    .req-box-header { background: var(--vino); color: #fff; padding: 4px 8px; font-size: 7pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+    .req-box.garante .req-box-header { background: var(--vino-dark); }
+    .req-list { list-style: none; padding: 5px 8px; display: flex; flex-direction: column; gap: 3px; }
+    .req-list li {
+      font-size: 7.5pt; color: var(--gris-700);
+      display: flex; align-items: flex-start; gap: 5px;
+      padding-bottom: 3px; border-bottom: 1px dotted var(--gris-200); line-height: 1.35;
+    }
+    .req-list li:last-child { border-bottom: none; padding-bottom: 0; }
+    .req-dot { width: 14px; height: 14px; border: 1.5px solid var(--vino); border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Footer ── */
+    .doc-footer { margin-top: auto; padding-top: 8px; border-top: 2px solid var(--beige); }
+    .footer-note { text-align: center; font-size: 6pt; color: var(--gris-500); margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--gris-200); }
+
+    /* ── Barra acciones ── */
+    .print-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--vino-dark); color: #fff;
+      padding: 9px 20px; width: 210mm; margin: 0 auto 12px;
+      border-radius: 0 0 8px 8px; gap: 10px;
+    }
+    .print-bar-brand   { font-size: 8pt; font-weight: 700; opacity: 0.75; letter-spacing: 0.05em; }
+    .print-bar-actions { display: flex; gap: 6px; }
+    .btn-print {
+      display: flex; align-items: center; gap: 5px;
+      border: none; border-radius: 5px; padding: 5px 14px;
+      font-family: 'Open Sans', sans-serif; font-size: 7.5pt;
+      font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-print:hover    { opacity: 0.85; }
+    .btn-print:disabled { opacity: 0.5; cursor: wait; }
+    .btn-save    { background: #fff; color: var(--vino); }
+    .btn-imprime { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .btn-back    { background: transparent; color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.2); }
+
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: none; }
+      .print-bar { display: none; }
+      .doc { margin: 0; box-shadow: none; padding: 14mm 16mm 12mm; min-height: 297mm; width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="print-bar">
+    <span class="print-bar-brand">HUMANCRED — Vista previa de cotización</span>
+    <div class="print-bar-actions">
+      <button class="btn-print btn-save" id="btnGuardar" onclick="guardarPDF()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Guardar PDF
+      </button>
+      <button class="btn-print btn-imprime" onclick="window.print()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9"/>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8"/>
+        </svg>
+        Imprimir
+      </button>
+      <button class="btn-print btn-back" onclick="window.history.back()">← Volver</button>
+    </div>
+  </div>
+
+  <div class="doc" id="doc">
+    <div class="doc-stripe"></div>
+
+    <!-- HEADER -->
+    <div class="doc-header">
+      <div class="header-left">
+        <img src="../img/logo2.png" alt="Humancred" class="header-logo"
+             onerror="this.style.display='none'">
+        <div class="header-brand-text">
+          <span class="brand-name">Humancred</span>
+          <span class="brand-slogan">Avanza con confianza</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="doc-title">Cotización de Crédito</div>
+        <div class="doc-date" id="doc-fecha">—</div>
+      </div>
+    </div>
+
+    <!-- CUOTA BANNER -->
+    <div class="cuota-banner">
+      <div>
+        <div class="cuota-banner-label">Cuota mensual estimada</div>
+        <div class="cuota-banner-valor" id="c-cuota">$ 0,00</div>
+      </div>
+      <div class="cuota-banner-right">
+        <div class="cuota-banner-label" id="c-tipo-credito">—</div>
+        <div class="cuota-banner-detail" id="c-plazo-detail">—</div>
+      </div>
+    </div>
+
+    <!-- DATOS DEL SOLICITANTE -->
+    <div class="section">
+      <div class="section-title">Datos del Solicitante</div>
+      <div class="info-grid cols-3">
+        <div class="info-row">
+          <span class="info-label">Nombre completo</span>
+          <span class="info-value" id="c-nombre">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Cédula de identidad</span>
+          <span class="info-value" id="c-cedula">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Tipo de trabajador</span>
+          <span class="info-value" id="c-tipo-socio">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETALLE DEL CRÉDITO -->
+    <div class="section">
+      <div class="section-title">Detalle del Crédito</div>
+      <table class="detail-grid">
+        <tbody>
+          <tr>
+            <td class="dg-label">Tipo de crédito</td>
+            <td class="dg-value" id="c-tipo-cred-det">—</td>
+            <td class="dg-label">Monto solicitado</td>
+            <td class="dg-value val-vino" id="c-monto">—</td>
+          </tr>
+          <tr>
+            <td class="dg-label">Monto financiado</td>
+            <td class="dg-value val-vino" id="c-financiado">—</td>
+            <td class="dg-label">Tasa de interés anual</td>
+            <td class="dg-value" id="c-tasa">—</td>
+          </tr>
+          <tr>
+            <td class="dg-label">Plazo</td>
+            <td class="dg-value" id="c-plazo">—</td>
+            <td class="dg-label">Cuota mensual</td>
+            <td class="dg-value val-vino" id="c-cuota-det">—</td>
+          </tr>
+          <tr>
+            <td class="dg-label">Seguro de desgravamen</td>
+            <td class="dg-value" id="c-desgravamen">—</td>
+            <td class="dg-label">Aportación del Socio (<span id="c-aportacion-pct">—</span>)</td>
+            <td class="dg-value" id="c-aportacion">—</td>
+          </tr>
+          <tr>
+            <td class="dg-label">Monto a recibir</td>
+            <td class="dg-value val-vino" id="c-neto">—</td>
+            <td class="dg-label">Solicitud con Garante</td>
+            <td class="dg-value" id="c-con-garante">—</td>
+          </tr>
+          <tr>
+            <td class="dg-label">Apertura de cuenta</td>
+            <td class="dg-value" id="c-apertura">—</td>
+            <td class="dg-label">Destino del crédito</td>
+            <td class="dg-value" id="c-destino">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- REQUISITOS -->
+    <div class="section">
+      <div class="section-title">Documentos Requeridos</div>
+      <div class="req-container" id="req-container">
+        <div class="req-box" id="req-solicitante">
+          <div class="req-box-header" id="req-sol-title">Requisitos del Solicitante</div>
+          <ul class="req-list" id="req-sol-list"></ul>
+        </div>
+        <div class="req-box garante" id="req-garante-box">
+          <div class="req-box-header">Requisitos del Garante</div>
+          <ul class="req-list" id="req-gar-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <div class="info-grid cols-3" style="margin-bottom:4px;">
+        <div class="info-row">
+          <span class="info-label">Asesor de crédito</span>
+          <span class="info-value" id="c-asesor">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Teléfono</span>
+          <span class="info-value" id="c-telefono">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Fecha de cotización</span>
+          <span class="info-value" id="c-fecha-footer">—</span>
+        </div>
+      </div>
+      <div class="footer-note">
+        Documento de cotización informativa. Válido por 7 días hábiles a partir de la fecha de emisión.
+        Valores sujetos a aprobación y verificación de requisitos. · Humancred — Avanza con confianza
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function fmt(n) {
+      return new Intl.NumberFormat('es-ES', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2
+      }).format(Number(n) || 0);
+    }
+
+    function set(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio',
+                   'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function fechaHoy() {
+      const d = new Date();
+      return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+    }
+
+    const TIPO_LABELS = {
+      Microcredito: 'Microcrédito y Estudiantil',
+      Consumo:      'Crédito de Consumo',
+      Hipotecario:  'Crédito Hipotecario',
+      Otro:         'Otro',
+    };
+
+    const REQ_DEPENDIENTE = [
+      'Copias de cédula — deudor y cónyuge',
+      'Copias papeleta de votación — deudor y cónyuge',
+      'Copia de servicio básico (agua, luz o teléfono)',
+      'Copia del impuesto predial (si posee)',
+      'Copia de matrícula del vehículo (si posee)',
+      'Certificados de ingresos y/o 3 últimos roles de pago',
+      'Movimientos bancarios — 3 últimos meses',
+    ];
+
+    const REQ_INDEPENDIENTE = [
+      'Copias de cédula — deudor y cónyuge',
+      'Copias papeleta de votación — deudor y cónyuge',
+      'Copia de servicio básico (agua, luz o teléfono)',
+      'Copia del impuesto predial (si posee)',
+      'Copia de matrícula del vehículo (si posee)',
+      'Copia del R.U.C. — 3 últimas declaraciones del I.V.A.',
+      'Movimientos bancarios — 3 últimos meses',
+      'Copia del impuesto a la renta (último año)',
+    ];
+
+    function getRequisitos(tipo) {
+      if (tipo === 'Dependiente')   return REQ_DEPENDIENTE;
+      if (tipo === 'Independiente') return REQ_INDEPENDIENTE;
+      return [...new Set([...REQ_DEPENDIENTE, ...REQ_INDEPENDIENTE])];
+    }
+
+    function renderReqs(ulId, tipo) {
+      const ul = document.getElementById(ulId);
+      if (!ul) return;
+      ul.innerHTML = getRequisitos(tipo).map(r =>
+        `<li><span class="req-dot"></span><span>${r}</span></li>`
+      ).join('');
+    }
+
+    const loan = JSON.parse(localStorage.getItem('loanData') || '{}');
+    const pdfD = JSON.parse(localStorage.getItem('pdfData')  || '{}');
+    const fecha = fechaHoy();
+
+    set('doc-fecha', `Cotización generada el ${fecha}`);
+
+    // Banner
+    set('c-cuota', `$ ${fmt(loan.monthlyPayment)}`);
+    set('c-tipo-credito', TIPO_LABELS[loan.creditType] || loan.creditType || '—');
+    const anos = Math.floor((loan.term || 0) / 12);
+    const mesesR = (loan.term || 0) % 12;
+    let plazoStr = `${loan.term || '—'} meses`;
+    if (anos > 0 && mesesR === 0) plazoStr += ` · ${anos} año${anos > 1 ? 's' : ''}`;
+    set('c-plazo-detail', `${plazoStr} · Cuota fija`);
+
+    // Socio
+    set('c-nombre',     pdfD.nombre     || '—');
+    set('c-cedula',     pdfD.cedula     || '—');
+    set('c-tipo-socio', pdfD.tipo_socio || '—');
+
+    // Detalle
+    set('c-tipo-cred-det', TIPO_LABELS[loan.creditType] || loan.creditType || '—');
+    set('c-monto',      `$ ${fmt(loan.amount)}`);
+    set('c-financiado', `$ ${fmt(loan.financedAmount)}`);
+    set('c-tasa',       `${loan.interest}% anual efectiva`);
+    set('c-plazo',      plazoStr);
+    set('c-cuota-det',  `$ ${fmt(loan.monthlyPayment)}`);
+    set('c-aportacion-pct', `${loan.encajeRate}%`);
+    set('c-aportacion', `$ ${fmt(loan.encajeAmount)}`);
+    set('c-neto',       `$ ${fmt(loan.netAmount)}`);
+
+    // Desgravamen
+    const desgEl = document.getElementById('c-desgravamen');
+    if (loan.desgravamenActivo) {
+      desgEl.textContent = `$ ${fmt(loan.desgravamenAmount)} · Incluido en préstamo`;
+      desgEl.className = 'dg-value val-vino';
+    } else {
+      desgEl.textContent = 'No incluido';
+      desgEl.className = 'dg-value val-na';
+    }
+
+    // Garante
+    const conGarante = loan.conGarante || pdfD.con_garante || false;
+    const garanteEl = document.getElementById('c-con-garante');
+    garanteEl.textContent = conGarante ? 'Sí — Con Garante' : 'No — Aportación del Socio';
+    garanteEl.className   = conGarante ? 'dg-value val-vino' : 'dg-value';
+
+    set('c-destino',  pdfD.destino  || '—');
+    set('c-apertura', pdfD.apertura ? `$ ${fmt(pdfD.apertura)}` : '$ 0,00');
+    set('c-asesor',   pdfD.asesor   || '—');
+    set('c-telefono', pdfD.telefono || '—');
+    set('c-fecha-footer', fecha);
+
+    // Requisitos
+    const tipoSolicitud = pdfD.tipo_socio || 'Dependiente';
+    set('req-sol-title', tipoSolicitud === 'Ambos'
+      ? 'Requisitos del Solicitante (Dep. e Indep.)'
+      : `Requisitos — ${tipoSolicitud}`);
+    renderReqs('req-sol-list', tipoSolicitud);
+
+    const garanteBox   = document.getElementById('req-garante-box');
+    const reqContainer = document.getElementById('req-container');
+    if (garanteBox)   garanteBox.style.display = conGarante ? '' : 'none';
+    if (reqContainer) reqContainer.style.gridTemplateColumns = conGarante ? '1fr 1fr' : '1fr';
+    if (conGarante)   renderReqs('req-gar-list', 'Dependiente');
+
+    // Guardar PDF
+    function guardarPDF() {
+      const btn = document.getElementById('btnGuardar');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Generando…';
+
+      const nombreArchivo = (pdfD.nombre || 'cotizacion')
+        .replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+
+      html2pdf()
+        .set({
+          margin:      0,
+          filename:    `Cotizacion_Humancred_${nombreArchivo}.pdf`,
+          image:       { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(document.getElementById('doc'))
+        .save()
+        .then(() => {
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Guardar PDF`;
+        });
+    }
+
+    if (new URLSearchParams(location.search).get('print') === '1') {
+      setTimeout(() => window.print(), 600);
+    }
+  </script>
+</body>
+</html>

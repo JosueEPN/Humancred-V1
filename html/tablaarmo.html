@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabla de Amortización — Humancred</title>
+  <link rel="stylesheet" href="../css/app.css" />
+  <style>
+    .page-wrapper {
+      width: 100%;
+      max-width: 980px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .resumen-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      background: var(--blanco);
+      border: 1px solid #EAEAEA;
+      border-radius: var(--radio-lg);
+      overflow: hidden;
+    }
+
+    .resumen-cell {
+      background: var(--blanco);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      border-right: 1px solid #EAEAEA;
+    }
+
+    .resumen-cell:last-child { border-right: none; }
+
+    .resumen-cell-label {
+      font-size: var(--texto-xs);
+      font-weight: 500;
+      color: var(--gris-500);
+      letter-spacing: 0.01em;
+    }
+
+    .resumen-cell-valor {
+      font-size: var(--texto-base);
+      font-weight: 700;
+      color: var(--gris-900);
+    }
+
+    .amort-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--texto-sm);
+    }
+
+    .amort-table thead tr { background: var(--vino); }
+
+    .amort-table thead th {
+      padding: 0.6rem 0.875rem;
+      text-align: right;
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+      font-size: var(--texto-xs);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .amort-table thead th:first-child {
+      text-align: center;
+      border-radius: var(--radio) 0 0 0;
+    }
+
+    .amort-table thead th:last-child { border-radius: 0 var(--radio) 0 0; }
+
+    .amort-table tbody td {
+      padding: 0.5rem 0.875rem;
+      text-align: right;
+      border-bottom: 1px solid var(--gris-100);
+      color: var(--gris-700);
+    }
+
+    .amort-table tbody td:first-child {
+      text-align: center;
+      font-weight: 700;
+      color: var(--vino);
+    }
+
+    .amort-table tbody tr:nth-child(even) td { background: var(--beige-bg); }
+    .amort-table tbody tr:hover td { background: var(--beige); transition: background 0.1s; }
+    .amort-table tbody tr:last-child td { border-bottom: none; }
+
+    .amort-table tfoot td {
+      padding: 0.625rem 0.875rem;
+      text-align: right;
+      background: var(--vino);
+      color: var(--blanco);
+      font-weight: 700;
+      font-size: var(--texto-sm);
+      border-top: 2px solid var(--vino-dark);
+    }
+
+    .amort-table tfoot td:first-child {
+      text-align: center;
+      border-radius: 0 0 0 var(--radio);
+    }
+
+    .amort-table tfoot td:last-child { border-radius: 0 0 var(--radio) 0; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .resumen-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .resumen-cell:nth-child(3) { border-right: none; }
+      .resumen-cell:nth-child(-n+3) { border-bottom: 1px solid #EAEAEA; }
+
+      .page-wrapper { gap: 0.75rem; }
+
+      .card { padding: 0; }
+      .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radio-xl); }
+      .amort-table { min-width: 520px; }
+    }
+
+    @media (max-width: 480px) {
+      .resumen-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .resumen-cell:nth-child(3) { border-right: 1px solid #EAEAEA; }
+      .resumen-cell:nth-child(-n+3) { border-bottom: 1px solid #EAEAEA; }
+      .resumen-cell:nth-child(2n) { border-right: none; }
+      .resumen-cell:nth-last-child(-n+2) { border-bottom: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <header class="app-header">
+      <img src="../img/logo2.png" alt="Humancred" class="header-logo"
+           onerror="this.style.display='none'">
+      <div class="header-brand">
+        <span class="brand-name">Humancred</span>
+        <span class="brand-slogan">Avanza con confianza</span>
+      </div>
+      <span style="font-size:var(--texto-xs);font-weight:700;color:var(--gris-500);
+                   padding:0.2rem 0.6rem;background:#F3F3F1;border-radius:4px;letter-spacing:0.04em;">
+        Tabla de Amortización
+      </span>
+      <div class="header-sep"></div>
+      <a href="resumen.html" class="header-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        <span class="header-back-text">Volver</span>
+      </a>
+    </header>
+
+    <main class="app-main" style="align-items:flex-start;">
+      <div class="page-wrapper">
+
+        <div class="resumen-grid fade-up">
+          <div class="resumen-cell">
+            <span class="resumen-cell-label">Monto</span>
+            <span class="resumen-cell-valor" id="res-monto">—</span>
+          </div>
+          <div class="resumen-cell">
+            <span class="resumen-cell-label">Tasa anual</span>
+            <span class="resumen-cell-valor" id="res-interes">—</span>
+          </div>
+          <div class="resumen-cell">
+            <span class="resumen-cell-label">Plazo</span>
+            <span class="resumen-cell-valor" id="res-plazo">—</span>
+          </div>
+          <div class="resumen-cell">
+            <span class="resumen-cell-label">Cuota mensual</span>
+            <span class="resumen-cell-valor" id="res-cuota">—</span>
+          </div>
+          <div class="resumen-cell">
+            <span class="resumen-cell-label">Aportación del Socio</span>
+            <span class="resumen-cell-valor" id="res-neto">—</span>
+          </div>
+          <div class="resumen-cell">
+            <span class="resumen-cell-label">Monto financiado</span>
+            <span class="resumen-cell-valor" id="res-total">—</span>
+          </div>
+        </div>
+
+        <div class="card fade-up" style="padding:0; overflow:hidden;">
+          <div class="table-wrapper" style="border-radius:var(--radio-xl); border:none;">
+            <table class="amort-table">
+              <thead>
+                <tr>
+                  <th>Período</th>
+                  <th>Mensualidad</th>
+                  <th>Interés</th>
+                  <th>Amortización</th>
+                  <th>Capital pendiente</th>
+                  <th>Capital amortizado</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      Humancred &copy; 2026 &mdash; Avanza con confianza
+    </footer>
+
+  </div>
+
+  <script>
+    function fmt(n) {
+      return new Intl.NumberFormat('es-ES', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      }).format(Number(n) || 0);
+    }
+
+    const data = JSON.parse(localStorage.getItem('loanData') || 'null');
+
+    if (!data || !data.amount) {
+      document.getElementById('tabla-body').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gris-500);">' +
+        'No hay datos disponibles. Vuelva al cotizador.' +
+        '</td></tr>';
+    } else {
+      const { amount, interest, term, monthlyPayment, encajeAmount, financedAmount } = data;
+      const capital0    = financedAmount || amount;
+      const monthlyRate = Math.pow(1 + interest / 100, 1 / 12) - 1;
+
+      document.getElementById('res-monto').textContent   = `$ ${fmt(capital0)}`;
+      document.getElementById('res-interes').textContent = `${interest}%`;
+      document.getElementById('res-plazo').textContent   = `${term} meses`;
+      document.getElementById('res-cuota').textContent   = `$ ${fmt(monthlyPayment)}`;
+      document.getElementById('res-neto').textContent    = `$ ${fmt(encajeAmount)}`;
+      document.getElementById('res-total').textContent   = `$ ${fmt(capital0)}`;
+
+      const tbody = document.getElementById('tabla-body');
+      let capital = capital0, capitalAmortizado = 0;
+
+      for (let i = 1; i <= term; i++) {
+        const interesMes   = capital * monthlyRate;
+        const amortizacion = monthlyPayment - interesMes;
+        capital           -= amortizacion;
+        capitalAmortizado += amortizacion;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i}</td>
+          <td>$ ${fmt(monthlyPayment)}</td>
+          <td>$ ${fmt(interesMes)}</td>
+          <td>$ ${fmt(amortizacion)}</td>
+          <td>$ ${fmt(Math.max(0, capital))}</td>
+          <td>$ ${fmt(capitalAmortizado)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+  </script>
+</body>
+</html>

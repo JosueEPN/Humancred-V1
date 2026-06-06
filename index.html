@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cotizador — Humancred</title>
+  <link rel="stylesheet" href="css/app.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+
+    /* ── Layout split ──────────────────────────────────────── */
+    .cotizador-split {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      height: 100vh;
+    }
+
+    /* ── Panel de marca ────────────────────────────────────── */
+    .brand-panel {
+      background: var(--vino);
+      padding: 2.25rem 2rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.035);
+      pointer-events: none;
+    }
+
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: 60px; left: -50px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: rgba(201,167,130,0.06);
+      pointer-events: none;
+    }
+
+    .brand-logo {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+      object-position: left;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand-content { flex: 1; }
+
+    .brand-eyebrow {
+      font-size: 0.6375rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 0.625rem;
+    }
+
+    .brand-headline {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.18;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.875rem;
+    }
+
+    .brand-desc {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.6;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+    }
+
+    .brand-credit-types {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .brand-credit-types span {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      padding: 0.2rem 0.625rem;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-detail {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.35);
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    .brand-sep {
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 2rem 0 1.25rem;
+    }
+
+    .brand-footer {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Panel de formulario ───────────────────────────────── */
+    .form-panel {
+      background: #F8F7F4;
+      overflow-y: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 2.5rem;
+    }
+
+    .cotizador-card {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .form-panel-header {
+      margin-bottom: 1.75rem;
+    }
+
+    .form-panel-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--gris-900);
+      letter-spacing: -0.025em;
+      margin-bottom: 0.2rem;
+    }
+
+    .form-panel-sub {
+      font-size: var(--texto-xs);
+      color: var(--gris-500);
+      font-weight: 400;
+    }
+
+    /* Tooltip de montos */
+    .monto-wrapper { position: relative; }
+
+    .monto-hint {
+      position: absolute;
+      right: 0.625rem;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--gris-500);
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      opacity: 0.5;
+      transition: opacity var(--transition);
+    }
+    .monto-hint:hover { opacity: 1; }
+    .monto-hint svg { width: 14px; height: 14px; }
+
+    .monto-tooltip {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 5px);
+      background: var(--blanco);
+      border: 1px solid #EAEAEA;
+      border-radius: var(--radio-lg);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      z-index: 10;
+      width: 360px;
+      overflow: hidden;
+    }
+
+    .monto-hint:hover .monto-tooltip,
+    .monto-tooltip:hover { display: block; }
+
+    .tooltip-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--texto-xs);
+    }
+
+    .tooltip-table thead tr {
+      background: var(--vino);
+      color: var(--blanco);
+    }
+
+    .tooltip-table thead th {
+      padding: 0.45rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .tooltip-table tbody td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid #F3F3F1;
+      color: var(--gris-700);
+    }
+    .tooltip-table tbody tr:last-child td { border-bottom: none; }
+    .tooltip-table tbody tr:hover td { background: #F8F7F4; }
+
+    #tasa-otros { display: none; }
+    #tasa-otros.visible { display: block; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      html, body { height: auto; overflow: auto; }
+      .cotizador-split { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+      .brand-panel {
+        padding: 1.25rem 1.5rem;
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+      }
+      .brand-logo { height: 40px; margin-bottom: 0; flex-shrink: 0; }
+      .brand-content { flex: 1; }
+      .brand-eyebrow { display: none; }
+      .brand-headline { font-size: 1rem; margin-bottom: 0; }
+      .brand-desc { display: none; }
+      .brand-credit-types { display: none; }
+      .brand-detail { display: none; }
+      .brand-sep { display: none; }
+      .brand-footer { display: none; }
+      .form-panel { padding: 1.5rem 1.25rem; align-items: stretch; }
+      .cotizador-card { max-width: none; }
+    }
+
+    @media (max-width: 480px) {
+      .brand-panel { padding: 1rem; }
+      .brand-headline { font-size: 0.875rem; }
+      .monto-tooltip { width: calc(100vw - 2rem); right: -0.5rem; }
+    }
+
+    #plazo-custom-container { display: none; }
+    #plazo-custom-container.visible {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-bottom: 0.875rem;
+      animation: fadeUp 0.2s ease-out both;
+    }
+
+    .form-divider {
+      height: 1px;
+      background: #EAEAEA;
+      margin: 0.875rem 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="cotizador-split">
+
+    <!-- ── Panel de marca ── -->
+    <div class="brand-panel">
+      <img src="img/logo2.png" alt="Humancred" class="brand-logo"
+           onerror="this.style.display='none'">
+
+      <div class="brand-content">
+        <div class="brand-eyebrow">Institucion Financiera</div>
+        <h1 class="brand-headline">Calcule su crédito en segundos</h1>
+        <p class="brand-desc">
+          Conozca su cuota mensual de forma clara y transparente.
+          Sin compromisos, sin letra pequeña.
+        </p>
+
+        <div class="brand-credit-types">
+          <span>Microcrédito</span>
+          <span>Consumo</span>
+          <span>Hipotecario</span>
+        </div>
+        <p class="brand-detail">
+          Cuota fija mensual · Amortización francesa · Cotización en PDF
+        </p>
+      </div>
+
+      <div class="brand-sep"></div>
+      <div class="brand-footer">Humancred &copy; 2026 &mdash; Avanza con confianza</div>
+    </div>
+
+    <!-- ── Panel de formulario ── -->
+    <div class="form-panel">
+      <div class="cotizador-card fade-up">
+
+        <div class="form-panel-header">
+          <div class="form-panel-title">Cotizador de Crédito</div>
+          <div class="form-panel-sub">Complete los datos para calcular la cuota estimada</div>
+        </div>
+
+        <!-- Tipo de crédito -->
+        <div class="form-group">
+          <label class="form-label" for="credito">Tipo de crédito</label>
+          <select id="credito" class="form-control">
+            <option value="" disabled selected>Seleccione un tipo</option>
+            <option value="Microcredito">Microcrédito y Estudiantil</option>
+            <option value="Consumo">Crédito de Consumo</option>
+            <option value="Hipotecario">Crédito Hipotecario</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+
+        <!-- Monto -->
+        <div class="form-group">
+          <label class="form-label" for="monto">Monto solicitado ($)</label>
+          <div class="monto-wrapper">
+            <input type="number" id="monto" class="form-control"
+                   placeholder="0.00" style="padding-right:2rem;" />
+            <div class="monto-hint">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div class="monto-tooltip">
+                <table class="tooltip-table">
+                  <thead><tr>
+                    <th>Tipo</th><th>Mínimo</th><th>Máximo</th><th>Plazo</th><th>Tasa</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr><td>Microcrédito</td><td>$500</td><td>$3.000</td><td>1–3 años</td><td>22%</td></tr>
+                    <tr><td>Consumo</td><td>$5.000</td><td>$80.000</td><td>3–8 años</td><td>11.95%</td></tr>
+                    <tr><td>Hipotecario</td><td>$15.000</td><td>$120.000</td><td>3–15 años</td><td>4.95%</td></tr>
+                    <tr><td>Otro</td><td colspan="4" style="color:var(--gris-500)">Sin límites — personalizado</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasa -->
+        <div class="form-group" id="tasa-container" style="display:none;">
+          <label class="form-label">Tasa de interés anual</label>
+          <div class="form-row">
+            <select id="tasa" class="form-control"></select>
+            <input type="number" id="tasa-otros" class="form-control"
+                   placeholder="Ej: 10.99" step="0.01" />
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Aportación del Socio -->
+        <div class="form-group">
+          <label class="form-label">Aportación del Socio</label>
+          <div class="pill-group">
+            <input type="radio" name="encaje" id="enc6" value="6" class="pill-option" />
+            <label for="enc6" class="pill-label">6%</label>
+            <input type="radio" name="encaje" id="enc8" value="8" class="pill-option" checked />
+            <label for="enc8" class="pill-label">8%</label>
+            <input type="radio" name="encaje" id="enc10" value="10" class="pill-option" />
+            <label for="enc10" class="pill-label">10%</label>
+          </div>
+        </div>
+
+        <!-- Plazo -->
+        <div class="form-group">
+          <label class="form-label" for="plazo">Plazo</label>
+          <select id="plazo" class="form-control">
+            <option value="">Seleccione el plazo</option>
+          </select>
+        </div>
+
+        <div id="plazo-custom-container">
+          <label class="form-label" for="plazo-custom">Plazo especial (meses)</label>
+          <input type="number" id="plazo-custom" class="form-control"
+                 placeholder="Ej: 18" min="1" />
+        </div>
+
+        <!-- Seguro de desgravamen -->
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label class="toggle-group" for="desgravamen-toggle">
+            <input type="checkbox" id="desgravamen-toggle" checked />
+            <span class="toggle-label">Incluir seguro de desgravamen &mdash; 2.5%</span>
+          </label>
+        </div>
+
+        <!-- Solicitar con Garante -->
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label class="toggle-group" for="garante-toggle">
+            <input type="checkbox" id="garante-toggle" />
+            <span class="toggle-label">Solicitar con Garante</span>
+          </label>
+        </div>
+
+        <div id="alerta" class="alert alert-error"></div>
+
+        <div class="btn-group">
+          <button id="btnCalcular" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2"/>
+              <line x1="8" y1="6" x2="16" y2="6"/>
+              <line x1="8" y1="10" x2="16" y2="10"/>
+              <line x1="8" y1="14" x2="12" y2="14"/>
+            </svg>
+            Calcular cotización
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/calculator.js?v=3"></script>
+  <script>
+    const plazosEstandar = {
+      Microcredito: [12, 24, 36],
+      Consumo:      [36, 48, 60, 72, 84, 96],
+      Hipotecario:  [36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180],
+      Otro:         [],
+    };
+
+    const tasasPorTipo = {
+      Microcredito: [{ v: '22',    t: '22.00%' }, { v: 'Otros', t: 'Otra tasa' }],
+      Consumo:      [{ v: '11.95', t: '11.95%' }, { v: '10.99', t: '10.99%' }, { v: 'Otros', t: 'Otra tasa' }],
+      Hipotecario:  [{ v: '4.95',  t: '4.95%'  }, { v: '4.50',  t: '4.50%'  }, { v: 'Otros', t: 'Otra tasa' }],
+      Otro:         [{ v: 'Otros', t: 'Personalizada' }],
+    };
+
+    const limites = {
+      Microcredito: { min: 500,   max: 3000   },
+      Consumo:      { min: 5000,  max: 80000  },
+      Hipotecario:  { min: 15000, max: 120000 },
+      Otro:         null,
+    };
+
+    const $ = id => document.getElementById(id);
+
+    function mostrarAlerta(msg) {
+      $('alerta').textContent = msg;
+      $('alerta').classList.add('visible');
+    }
+    function limpiarAlerta() {
+      $('alerta').textContent = '';
+      $('alerta').classList.remove('visible');
+    }
+
+    function cargarTasas(tipo) {
+      const sel = $('tasa');
+      sel.innerHTML = '';
+      const lista = tasasPorTipo[tipo] || [];
+      lista.forEach(({ v, t }) => {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = t;
+        sel.appendChild(o);
+      });
+      sel.value = lista[0]?.v || '';
+      $('tasa-otros').classList.remove('visible');
+      $('tasa-otros').value = '';
+      if (tipo === 'Otro') $('tasa-otros').classList.add('visible');
+    }
+
+    function cargarPlazos(tipo) {
+      const sel = $('plazo');
+      sel.innerHTML = '<option value="">Seleccione el plazo</option>';
+      (plazosEstandar[tipo] || []).forEach(m => {
+        const a = Math.floor(m / 12), r = m % 12;
+        let label = `${m} meses`;
+        if (a > 0 && r === 0) label += ` · ${a} año${a > 1 ? 's' : ''}`;
+        const o = document.createElement('option');
+        o.value = m; o.textContent = label;
+        sel.appendChild(o);
+      });
+      const oc = document.createElement('option');
+      oc.value = 'custom'; oc.textContent = 'Plazo especial…';
+      sel.appendChild(oc);
+    }
+
+    $('credito').addEventListener('change', () => {
+      const tipo = $('credito').value;
+      $('monto').value = '';
+      limpiarAlerta();
+      cargarTasas(tipo);
+      cargarPlazos(tipo);
+      $('tasa-container').style.display = 'block';
+      $('plazo-custom-container').classList.remove('visible');
+      $('plazo-custom').value = '';
+    });
+
+    $('tasa').addEventListener('change', () => {
+      if ($('tasa').value === 'Otros') $('tasa-otros').classList.add('visible');
+      else { $('tasa-otros').classList.remove('visible'); $('tasa-otros').value = ''; }
+    });
+
+    $('plazo').addEventListener('change', () => {
+      if ($('plazo').value === 'custom') {
+        $('plazo-custom-container').classList.add('visible');
+        $('plazo-custom').focus();
+      } else {
+        $('plazo-custom-container').classList.remove('visible');
+        $('plazo-custom').value = '';
+      }
+    });
+
+    $('btnCalcular').addEventListener('click', () => {
+      limpiarAlerta();
+
+      const tipo   = $('credito').value;
+      const monto  = Number($('monto').value);
+      const tasa   = $('tasa').value === 'Otros' ? Number($('tasa-otros').value) : Number($('tasa').value);
+      const encaje = Number(document.querySelector('input[name="encaje"]:checked')?.value || 8);
+      const desgravamen = $('desgravamen-toggle').checked;
+      const conGarante  = $('garante-toggle').checked;
+      const plazo  = $('plazo').value === 'custom' ? Number($('plazo-custom').value) : Number($('plazo').value);
+
+      if (!tipo)  return mostrarAlerta('Seleccione un tipo de crédito.');
+      if (!monto || monto <= 0) return mostrarAlerta('Ingrese un monto válido.');
+      if (!plazo || plazo < 1)  return mostrarAlerta('Ingrese un plazo válido.');
+      if (isNaN(tasa) || tasa <= 0) return mostrarAlerta('Ingrese una tasa de interés válida.');
+
+      const lim = limites[tipo];
+      if (lim && (monto < lim.min || monto > lim.max)) {
+        const nombre = tipo === 'Microcredito' ? 'Microcrédito' : tipo;
+        return mostrarAlerta(`${nombre}: monto entre $${lim.min.toLocaleString('es-ES')} y $${lim.max.toLocaleString('es-ES')}.`);
+      }
+
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
+      data.conGarante = conGarante;
+      localStorage.setItem('loanData', JSON.stringify(data));
+      window.location.href = 'html/resumen.html';
+    });
+  </script>
+</body>
+</html>

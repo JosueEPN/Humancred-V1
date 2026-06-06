@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resultado — Humancred</title>
+  <link rel="stylesheet" href="../css/app.css" />
+  <style>
+    .app-shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .app-header { position: sticky; top: 0; z-index: 50; flex-shrink: 0; }
+    .app-footer { position: sticky; bottom: 0; z-index: 50; flex-shrink: 0; }
+    .app-main  { padding: 0; background: #F5F4F1; align-items: stretch; flex: 1; overflow-y: auto; height: 0; }
+
+    .resumen-layout {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: #fff;
+      border-right: 1px solid #EAEAEA;
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: calc(100vh - var(--header-h) - var(--footer-h));
+      overflow-y: hidden;
+    }
+
+    .sidebar-label {
+      font-size: var(--texto-xs);
+      font-weight: 700;
+      color: var(--gris-500);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar .form-group { margin-bottom: 0.75rem; }
+
+    .sidebar-actions {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid #EAEAEA;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .btn-sidebar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.575rem 1rem;
+      border-radius: var(--radio);
+      font-size: var(--texto-xs);
+      font-weight: 700;
+      font-family: var(--fuente);
+      cursor: pointer;
+      transition: all var(--transition);
+      width: 100%;
+      letter-spacing: 0.03em;
+      border: none;
+      outline: none;
+    }
+    .btn-sidebar:active { transform: scale(0.98); }
+    .btn-sidebar.primary { background: var(--vino); color: #fff; }
+    .btn-sidebar.primary:hover { background: var(--vino-dark); }
+    .btn-sidebar.neutral { background: #F5F4F1; color: var(--gris-700); }
+    .btn-sidebar.neutral:hover { background: #EAEAEA; }
+    .btn-sidebar.accent { background: var(--dorado); color: var(--vino-deep); }
+    .btn-sidebar.accent:hover { background: #b8966e; }
+
+    #tasa-otros { display: none; }
+    #tasa-otros.visible { display: block; margin-top: 0.4rem; }
+    #plazo-custom-container { display: none; }
+    #plazo-custom-container.visible {
+      display: flex; flex-direction: column; gap: 0.3rem;
+      margin-bottom: 0.75rem;
+      animation: fadeUp 0.2s ease-out both;
+    }
+
+    /* ── Panel resultados ── */
+    .results-panel {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: auto;
+    }
+
+    /* ── Cuota hero ── */
+    .cuota-hero {
+      background: var(--vino);
+      border-radius: var(--radio-xl);
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .cuota-hero::after {
+      content: '';
+      position: absolute;
+      right: -40px; top: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      pointer-events: none;
+    }
+    .cuota-hero-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.3rem;
+    }
+    .cuota-hero-valor {
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.4rem;
+    }
+    .cuota-hero-sub { font-size: var(--texto-xs); color: rgba(255,255,255,0.45); font-weight: 400; }
+    .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; z-index: 1; }
+    .cuota-hero-badge {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.9);
+      border-radius: 6px;
+      padding: 0.3rem 0.875rem;
+      font-size: var(--texto-xs);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    /* ── Métricas bento ── */
+    .metrics-bento {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #fff;
+      border: 1px solid #EAEAEA;
+      border-radius: var(--radio-xl);
+      overflow: hidden;
+    }
+    .metric-cell {
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      border-right: 1px solid #EAEAEA;
+      border-bottom: 1px solid #EAEAEA;
+    }
+    .metric-cell:nth-child(3n)        { border-right: none; }
+    .metric-cell:nth-last-child(-n+3) { border-bottom: none; }
+    .metric-label { font-size: var(--texto-xs); font-weight: 500; color: var(--gris-500); }
+    .metric-val   { font-size: var(--texto-base); font-weight: 700; color: var(--gris-900); line-height: 1.2; }
+    .metric-cell.key { background: #FBF9F7; }
+    .metric-cell.key .metric-label { color: var(--vino); font-weight: 600; }
+    .metric-cell.key .metric-val   { color: var(--vino); font-size: var(--texto-lg); }
+    .metric-val.aplica    { color: var(--vino); }
+    .metric-val.no-aplica { color: #b0b0b0; font-weight: 400; font-size: var(--texto-sm); }
+
+    /* ── Beneficios ── */
+    .benefits-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #fff;
+      border: 1px solid #EAEAEA;
+      border-radius: var(--radio-lg);
+      overflow: hidden;
+      align-items: stretch;
+    }
+    .benefit-cell {
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.75rem;
+      border-right: 1px solid #EAEAEA;
+      min-height: 100px;
+    }
+    .benefit-cell:last-child { border-right: none; }
+    .benefit-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: #F5F2EE;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .benefit-icon svg { width: 15px; height: 15px; stroke: var(--vino); }
+    .benefit-text { display: flex; flex-direction: column; gap: 0.2rem; }
+    .benefit-title { font-size: var(--texto-xs); font-weight: 700; color: var(--gris-900); }
+    .benefit-desc  { font-size: 0.7rem; font-weight: 400; color: var(--gris-500); line-height: 1.5; }
+
+    /* ── Sección requisitos ── */
+    .req-section {
+      background: #fff;
+      border: 1px solid #EAEAEA;
+      border-radius: var(--radio-xl);
+      overflow: hidden;
+    }
+    .req-section-header {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid #EAEAEA;
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+    .req-section-title { font-size: var(--texto-sm); font-weight: 700; color: var(--gris-900); }
+    .req-section-sub   { font-size: 0.68rem; color: var(--gris-500); }
+    .req-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .req-col  { border-right: 1px solid #EAEAEA; }
+    .req-col:last-child { border-right: none; }
+    .req-col-header {
+      padding: 0.45rem 1rem;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .req-dep { background: var(--vino); }
+    .req-ind { background: var(--vino-dark); }
+    .req-list-ui { list-style: none; padding: 0.5rem 0.875rem; display: flex; flex-direction: column; }
+    .req-list-ui li {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      padding: 0.35rem 0; border-bottom: 1px solid #F5F4F1;
+      font-size: var(--texto-xs); color: var(--gris-700); line-height: 1.45;
+    }
+    .req-list-ui li:last-child { border-bottom: none; }
+    .req-num {
+      min-width: 16px; height: 16px;
+      background: #F5F2EE; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.58rem; font-weight: 700; color: var(--vino);
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .resumen-layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid #EAEAEA; }
+    }
+
+    @media (max-width: 768px) {
+      .metrics-bento { grid-template-columns: repeat(2, 1fr); }
+      .metric-cell:nth-child(3n)        { border-right: 1px solid #EAEAEA; }
+      .metric-cell:nth-last-child(-n+3) { border-bottom: 1px solid #EAEAEA; }
+      .metric-cell:nth-child(2n)        { border-right: none; }
+      .metric-cell:nth-last-child(-n+2) { border-bottom: none; }
+      .benefits-strip { grid-template-columns: 1fr; }
+      .benefit-cell   { border-right: none; border-bottom: 1px solid #EAEAEA; }
+      .benefit-cell:last-child { border-bottom: none; }
+      .req-grid { grid-template-columns: 1fr; }
+      .req-col  { border-right: none; border-bottom: 1px solid #EAEAEA; }
+      .req-col:last-child { border-bottom: none; }
+    }
+
+    @media (max-width: 480px) {
+      .metrics-bento { grid-template-columns: 1fr; }
+      .metric-cell:nth-child(2n)        { border-right: none; }
+      .metric-cell:nth-last-child(-n+2) { border-bottom: 1px solid #EAEAEA; }
+      .metric-cell:last-child           { border-bottom: none; }
+      .cuota-hero { padding: 1.25rem; }
+      .cuota-hero-valor { font-size: 2.1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <header class="app-header">
+      <img src="../img/logo2.png" alt="Humancred" class="header-logo"
+           onerror="this.style.display='none'">
+      <div class="header-brand">
+        <span class="brand-name">Humancred</span>
+        <span class="brand-slogan">Avanza con confianza</span>
+      </div>
+      <span style="font-size:var(--texto-xs);font-weight:700;color:var(--gris-500);
+                   padding:0.2rem 0.6rem;background:#F3F3F1;border-radius:4px;letter-spacing:0.04em;">
+        Resultado
+      </span>
+      <div class="header-sep"></div>
+      <a href="../index.html" class="header-back">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        <span class="header-back-text">Nueva cotización</span>
+      </a>
+    </header>
+
+    <main class="app-main">
+      <div class="resumen-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar fade-up">
+          <p class="sidebar-label">Ajustar cotización</p>
+
+          <div class="form-group">
+            <label class="form-label" for="credito-s">Tipo de crédito</label>
+            <select id="credito-s" class="form-control">
+              <option value="" disabled>Seleccione</option>
+              <option value="Microcredito">Microcrédito y Estudiantil</option>
+              <option value="Consumo">Crédito de Consumo</option>
+              <option value="Hipotecario">Crédito Hipotecario</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="monto-s">Monto solicitado ($)</label>
+            <input type="number" id="monto-s" class="form-control" placeholder="0.00" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tasa de interés anual</label>
+            <select id="tasa-s" class="form-control"></select>
+            <input type="number" id="tasa-otros" class="form-control"
+                   placeholder="Ej: 10.99" step="0.01" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Aportación del Socio</label>
+            <div class="pill-group">
+              <input type="radio" name="encaje-s" id="enc6-s" value="6" class="pill-option" />
+              <label for="enc6-s" class="pill-label">6%</label>
+              <input type="radio" name="encaje-s" id="enc8-s" value="8" class="pill-option" checked />
+              <label for="enc8-s" class="pill-label">8%</label>
+              <input type="radio" name="encaje-s" id="enc10-s" value="10" class="pill-option" />
+              <label for="enc10-s" class="pill-label">10%</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="plazo-s">Plazo</label>
+            <select id="plazo-s" class="form-control">
+              <option value="">Seleccione el plazo</option>
+            </select>
+          </div>
+
+          <div id="plazo-custom-container">
+            <label class="form-label" for="plazo-custom">Plazo especial (meses)</label>
+            <input type="number" id="plazo-custom" class="form-control" placeholder="Ej: 18" min="1" />
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;" for="desgravamen-s">
+              <input type="checkbox" id="desgravamen-s" checked
+                     style="accent-color:var(--vino);width:14px;height:14px;flex-shrink:0;" />
+              <span style="font-size:var(--texto-xs);color:var(--gris-500);font-weight:500;">
+                Seguro de desgravamen — 2.5% (se suma al monto)
+              </span>
+            </label>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;" for="garante-s">
+              <input type="checkbox" id="garante-s"
+                     style="accent-color:var(--vino);width:14px;height:14px;flex-shrink:0;" />
+              <span style="font-size:var(--texto-xs);color:var(--gris-500);font-weight:500;">
+                Solicitar con Garante
+              </span>
+            </label>
+          </div>
+
+          <div id="alerta" class="alert alert-error" style="margin-bottom:0.5rem;"></div>
+
+          <div class="sidebar-actions">
+            <button id="btnRecalcular" class="btn-sidebar primary">Recalcular</button>
+            <button id="btnTablaAmortizacion" class="btn-sidebar neutral">Tabla de amortización</button>
+            <button id="btnGenerarPDF" class="btn-sidebar accent">Generar cotización PDF</button>
+          </div>
+        </aside>
+
+        <!-- RESULTADOS -->
+        <div class="results-panel">
+
+          <!-- Cuota hero -->
+          <div class="cuota-hero fade-up">
+            <div class="hero-left">
+              <div class="cuota-hero-eyebrow">Cuota mensual estimada</div>
+              <div class="cuota-hero-valor" id="dataCuota">$ 0,00</div>
+              <div class="cuota-hero-sub" id="hero-sub">Sistema de amortización francés</div>
+            </div>
+            <div class="hero-right">
+              <div class="cuota-hero-badge" id="badge-tipo">—</div>
+            </div>
+          </div>
+
+          <!-- Métricas bento -->
+          <div class="metrics-bento fade-up">
+            <div class="metric-cell">
+              <span class="metric-label">Monto solicitado</span>
+              <span class="metric-val" id="dataDe1">$ 0,00</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Monto financiado</span>
+              <span class="metric-val" id="dataDe1b">$ 0,00</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Tasa de interés anual</span>
+              <span class="metric-val" id="dataDe2">—</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Plazo</span>
+              <span class="metric-val" id="dataDe5">—</span>
+            </div>
+            <div class="metric-cell key">
+              <span class="metric-label" id="aportacion-label">Aportación del Socio</span>
+              <span class="metric-val" id="dataDe6">$ 0,00</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Seguro de desgravamen</span>
+              <span class="metric-val no-aplica" id="desgravamen-status">No incluido</span>
+            </div>
+            <div class="metric-cell key">
+              <span class="metric-label">Monto a recibir</span>
+              <span class="metric-val" id="dataDe7">$ 0,00</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Cuota diaria equiv.</span>
+              <span class="metric-val" id="dataDe10">$ 0,00</span>
+            </div>
+            <div class="metric-cell">
+              <span class="metric-label">Tipo de garantía</span>
+              <span class="metric-val" id="dataDe12">—</span>
+            </div>
+          </div>
+
+          <!-- Beneficios -->
+          <div class="benefits-strip fade-up">
+            <div class="benefit-cell">
+              <div class="benefit-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="benefit-text">
+                <span class="benefit-title">Aprobación rápida</span>
+                <span class="benefit-desc">Respuesta en 24 a 48 horas hábiles desde la solicitud</span>
+              </div>
+            </div>
+            <div class="benefit-cell">
+              <div class="benefit-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                  <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
+                  <line x1="12" y1="12" x2="12" y2="16"/>
+                </svg>
+              </div>
+              <div class="benefit-text">
+                <span class="benefit-title">Cuota fija garantizada</span>
+                <span class="benefit-desc">Mismo valor cada mes, sin variaciones ni sorpresas</span>
+              </div>
+            </div>
+            <div class="benefit-cell">
+              <div class="benefit-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="benefit-text">
+                <span class="benefit-title">Historial crediticio</span>
+                <span class="benefit-desc">Fortalece su perfil y accede a mejores condiciones</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Requisitos -->
+          <div class="req-section fade-up">
+            <div class="req-section-header">
+              <span class="req-section-title">Documentos Requeridos</span>
+              <span class="req-section-sub">Presente junto a la solicitud de crédito</span>
+            </div>
+            <div class="req-grid">
+              <div class="req-col">
+                <div class="req-col-header req-dep">Dependiente &mdash; Empleado</div>
+                <ul class="req-list-ui">
+                  <li><span class="req-num">1</span>Copias de cédula — deudor y cónyuge</li>
+                  <li><span class="req-num">2</span>Copias papeleta de votación — deudor y cónyuge</li>
+                  <li><span class="req-num">3</span>Copia de servicio básico (agua, luz o teléfono)</li>
+                  <li><span class="req-num">4</span>Copia del impuesto predial (si posee)</li>
+                  <li><span class="req-num">5</span>Copia de matrícula del vehículo (si posee)</li>
+                  <li><span class="req-num">6</span>Certificados de ingresos y/o 3 últimos roles de pago</li>
+                  <li><span class="req-num">7</span>Movimientos bancarios — 3 últimos meses</li>
+                </ul>
+              </div>
+              <div class="req-col">
+                <div class="req-col-header req-ind">Independiente &mdash; Negocio Propio</div>
+                <ul class="req-list-ui">
+                  <li><span class="req-num">1</span>Copias de cédula — deudor y cónyuge</li>
+                  <li><span class="req-num">2</span>Copias papeleta de votación — deudor y cónyuge</li>
+                  <li><span class="req-num">3</span>Copia de servicio básico (agua, luz o teléfono)</li>
+                  <li><span class="req-num">4</span>Copia del impuesto predial (si posee)</li>
+                  <li><span class="req-num">5</span>Copia de matrícula del vehículo (si posee)</li>
+                  <li><span class="req-num">6</span>Copia del R.U.C. — 3 últimas declaraciones del I.V.A.</li>
+                  <li><span class="req-num">7</span>Movimientos bancarios — 3 últimos meses</li>
+                  <li><span class="req-num">8</span>Copia del impuesto a la renta (último año)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">Humancred &copy; 2026 &mdash; Avanza con confianza</footer>
+  </div>
+
+  <!-- MODAL PDF -->
+  <div id="modalPDF" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Datos para la cotización</h2>
+        <button class="modal-close" id="cerrarModal" title="Cerrar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-section span-2">Datos del Socio</div>
+        <div class="form-group">
+          <label class="form-label" for="pdf-nombre">Nombre completo</label>
+          <input type="text" id="pdf-nombre" class="form-control" placeholder="Ej: Juan Pérez" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pdf-cedula">Cédula</label>
+          <input type="text" id="pdf-cedula" class="form-control" placeholder="Ej: 1712345678" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pdf-tipo-socio">Tipo de trabajador</label>
+          <select id="pdf-tipo-socio" class="form-control">
+            <option value="">Seleccione...</option>
+            <option value="Dependiente">Dependiente (empleado)</option>
+            <option value="Independiente">Independiente (negocio propio)</option>
+            <option value="Ambos">Ambos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pdf-apertura">Apertura de cuenta ($)</label>
+          <input type="number" id="pdf-apertura" class="form-control" placeholder="Ej: 2.00" step="0.01" />
+        </div>
+        <div class="modal-section span-2">Asesor y destino</div>
+        <div class="form-group">
+          <label class="form-label" for="pdf-asesor">Nombre del asesor</label>
+          <input type="text" id="pdf-asesor" class="form-control" placeholder="Ej: María López" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pdf-telefono">Teléfono</label>
+          <input type="tel" id="pdf-telefono" class="form-control" placeholder="099 123 4567" />
+        </div>
+        <div class="form-group span-2">
+          <label class="form-label" for="pdf-destino">Destino del crédito</label>
+          <select id="pdf-destino" class="form-control">
+            <option value="">Seleccione...</option>
+            <option value="Comercio">Comercio</option>
+            <option value="Ganadería">Ganadería</option>
+            <option value="Agricultura">Agricultura</option>
+            <option value="Compra de terreno">Compra de terreno</option>
+            <option value="Construcción de casa">Construcción de casa</option>
+            <option value="Compra de vehículo">Compra de vehículo</option>
+            <option value="Compra de electrodomésticos">Compra de electrodomésticos</option>
+            <option value="Educación">Educación</option>
+            <option value="Pago de deudas">Pago de deudas</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div class="form-group span-2" id="destino-otros-container" style="display:none;">
+          <label class="form-label" for="pdf-destino-otros">Especifique el destino</label>
+          <input type="text" id="pdf-destino-otros" class="form-control" placeholder="Describa el destino" />
+        </div>
+        <div id="alerta-pdf" class="alert alert-error span-2"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="cancelarModal">Cancelar</button>
+        <button class="btn btn-primary" id="confirmarPDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="width:14px;height:14px;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          Generar PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/calculator.js?v=4"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+
+    const plazosEstandar = {
+      Microcredito: [12, 24, 36],
+      Consumo:      [36, 48, 60, 72, 84, 96],
+      Hipotecario:  [36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180],
+      Otro:         [],
+    };
+
+    const tasasPorTipo = {
+      Microcredito: [{ v: '22',    t: '22.00%' }, { v: 'Otros', t: 'Otra tasa' }],
+      Consumo:      [{ v: '11.95', t: '11.95%' }, { v: '10.99', t: '10.99%' }, { v: 'Otros', t: 'Otra tasa' }],
+      Hipotecario:  [{ v: '4.95',  t: '4.95%'  }, { v: '4.50',  t: '4.50%'  }, { v: 'Otros', t: 'Otra tasa' }],
+      Otro:         [{ v: 'Otros', t: 'Personalizada' }],
+    };
+
+    const tipoLabels = {
+      Microcredito: 'Microcrédito', Consumo: 'Consumo',
+      Hipotecario: 'Hipotecario',   Otro: 'Otro',
+    };
+
+    function fmt(n) {
+      return new Intl.NumberFormat('es-ES', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2
+      }).format(Number(n) || 0);
+    }
+
+    function animateEl(el) {
+      el.classList.remove('value-updated');
+      void el.offsetWidth;
+      el.classList.add('value-updated');
+    }
+
+    function setVal(id, text) {
+      const el = $(id);
+      if (!el) return;
+      el.textContent = text;
+      animateEl(el);
+    }
+
+    function actualizarUI(data) {
+      if (!data || !data.amount) return;
+
+      const a = Math.floor(data.term / 12), r = data.term % 12;
+      let plazoText = `${data.term} meses`;
+      if (a > 0 && r === 0) plazoText = `${a} año${a > 1 ? 's' : ''}`;
+      else if (a > 0) plazoText = `${a}a ${r}m`;
+
+      setVal('dataCuota', `$ ${fmt(data.monthlyPayment)}`);
+      setVal('badge-tipo', tipoLabels[data.creditType] || data.creditType || '—');
+      setVal('dataDe1',  `$ ${fmt(data.amount)}`);
+      setVal('dataDe1b', `$ ${fmt(data.financedAmount)}`);
+      setVal('dataDe2',  `${data.interest}% anual`);
+      setVal('dataDe5',  plazoText);
+      setVal('dataDe6',  `$ ${fmt(data.encajeAmount)}`);
+      setVal('dataDe7',  `$ ${fmt(data.netAmount)}`);
+      setVal('dataDe10', `$ ${fmt(data.monthlyPayment / 30)} / día`);
+
+      const conGarante = data.conGarante || false;
+      setVal('dataDe12', conGarante ? 'Con Garante' : 'Aportación del Socio');
+      $('aportacion-label').textContent = `Aportación del Socio (${data.encajeRate}%)`;
+
+      const desgEl = $('desgravamen-status');
+      if (data.desgravamenActivo) {
+        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · Incluido en préstamo`;
+        desgEl.className = 'metric-val aplica';
+      } else {
+        desgEl.textContent = 'No incluido';
+        desgEl.className = 'metric-val no-aplica';
+      }
+      animateEl(desgEl);
+
+      $('hero-sub').textContent = `${data.term} meses · ${data.interest}% anual · Cuota fija`;
+    }
+
+    function cargarTasas(tipo, tasaActual) {
+      const sel = $('tasa-s'), otros = $('tasa-otros');
+      sel.innerHTML = '';
+      const lista = tasasPorTipo[tipo] || [];
+      lista.forEach(({ v, t }) => {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = t;
+        sel.appendChild(o);
+      });
+      const existe = lista.some(x => x.v == tasaActual);
+      if (tasaActual && existe) {
+        sel.value = tasaActual;
+        otros.classList.remove('visible');
+      } else if (tasaActual && !existe) {
+        sel.value = 'Otros';
+        otros.classList.add('visible');
+        otros.value = tasaActual;
+      } else {
+        sel.value = lista[0]?.v || '';
+        if (tipo === 'Otro') otros.classList.add('visible');
+        else otros.classList.remove('visible');
+      }
+    }
+
+    function cargarPlazos(tipo, plazoActual) {
+      const sel = $('plazo-s');
+      sel.innerHTML = '<option value="">Seleccione el plazo</option>';
+      const plazos = plazosEstandar[tipo] || [];
+      plazos.forEach(m => {
+        const a = Math.floor(m / 12), r = m % 12;
+        let label = `${m} meses`;
+        if (a > 0 && r === 0) label += ` · ${a} año${a > 1 ? 's' : ''}`;
+        const o = document.createElement('option');
+        o.value = m; o.textContent = label;
+        sel.appendChild(o);
+      });
+      const oc = document.createElement('option');
+      oc.value = 'custom'; oc.textContent = 'Plazo especial…';
+      sel.appendChild(oc);
+
+      if (plazoActual) {
+        if (plazos.includes(Number(plazoActual))) {
+          sel.value = plazoActual;
+          $('plazo-custom-container').classList.remove('visible');
+        } else {
+          sel.value = 'custom';
+          $('plazo-custom-container').classList.add('visible');
+          $('plazo-custom').value = plazoActual;
+        }
+      }
+    }
+
+    // Inicializar
+    let loanData = JSON.parse(localStorage.getItem('loanData') || '{}');
+
+    if (loanData.creditType && loanData.amount) {
+      const prevConGarante = loanData.conGarante || false;
+      loanData = calculateLoan(
+        loanData.creditType, loanData.amount, loanData.term,
+        loanData.interest, loanData.encajeRate, loanData.desgravamenActivo
+      );
+      loanData.conGarante = prevConGarante;
+      localStorage.setItem('loanData', JSON.stringify(loanData));
+    }
+
+    if (loanData.creditType) {
+      $('credito-s').value = loanData.creditType;
+      $('monto-s').value   = loanData.amount || '';
+      const encVal   = loanData.encajeRate || 8;
+      const encRadio = document.querySelector(`input[name="encaje-s"][value="${encVal}"]`);
+      if (encRadio) encRadio.checked = true;
+      $('desgravamen-s').checked = loanData.desgravamenActivo !== false;
+      if (loanData.conGarante) $('garante-s').checked = true;
+      cargarTasas(loanData.creditType, String(loanData.interest));
+      cargarPlazos(loanData.creditType, loanData.term);
+      actualizarUI(loanData);
+    }
+
+    // Eventos
+    $('credito-s').addEventListener('change', () => {
+      $('monto-s').value = '';
+      $('alerta').textContent = ''; $('alerta').classList.remove('visible');
+      cargarTasas($('credito-s').value, null);
+      cargarPlazos($('credito-s').value, null);
+    });
+
+    $('tasa-s').addEventListener('change', () => {
+      if ($('tasa-s').value === 'Otros') $('tasa-otros').classList.add('visible');
+      else { $('tasa-otros').classList.remove('visible'); $('tasa-otros').value = ''; }
+    });
+
+    $('plazo-s').addEventListener('change', () => {
+      if ($('plazo-s').value === 'custom') $('plazo-custom-container').classList.add('visible');
+      else { $('plazo-custom-container').classList.remove('visible'); $('plazo-custom').value = ''; }
+    });
+
+    $('btnRecalcular').addEventListener('click', () => {
+      const al = $('alerta');
+      al.textContent = ''; al.classList.remove('visible');
+
+      const tipo        = $('credito-s').value;
+      const monto       = Number($('monto-s').value);
+      const tasa        = $('tasa-s').value === 'Otros'
+        ? Number($('tasa-otros').value) : Number($('tasa-s').value);
+      const encaje      = Number(document.querySelector('input[name="encaje-s"]:checked')?.value || 8);
+      const desgravamen = $('desgravamen-s').checked;
+      const conGarante  = $('garante-s').checked;
+      const plazo       = $('plazo-s').value === 'custom'
+        ? Number($('plazo-custom').value) : Number($('plazo-s').value);
+
+      if (!tipo || !monto || monto <= 0 || !plazo || plazo < 1 || isNaN(tasa) || tasa <= 0) {
+        al.textContent = 'Complete todos los campos correctamente.';
+        al.classList.add('visible');
+        return;
+      }
+
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
+      data.conGarante = conGarante;
+      localStorage.setItem('loanData', JSON.stringify(data));
+      actualizarUI(data);
+    });
+
+    $('btnTablaAmortizacion').addEventListener('click', () => {
+      window.location.href = 'tablaarmo.html';
+    });
+
+    // Modal PDF
+    function abrirModal()  { $('modalPDF').classList.add('abierto'); }
+    function cerrarModal() {
+      $('modalPDF').classList.remove('abierto');
+      $('alerta-pdf').textContent = ''; $('alerta-pdf').classList.remove('visible');
+    }
+
+    $('btnGenerarPDF').addEventListener('click', abrirModal);
+    $('cerrarModal').addEventListener('click', cerrarModal);
+    $('cancelarModal').addEventListener('click', cerrarModal);
+    $('modalPDF').addEventListener('click', e => { if (e.target === $('modalPDF')) cerrarModal(); });
+
+    $('pdf-destino').addEventListener('change', () => {
+      $('destino-otros-container').style.display =
+        $('pdf-destino').value === 'Otros' ? 'block' : 'none';
+    });
+
+    $('confirmarPDF').addEventListener('click', async () => {
+      const alPdf = $('alerta-pdf');
+      alPdf.textContent = ''; alPdf.classList.remove('visible');
+
+      const nombre    = $('pdf-nombre').value.trim();
+      const cedula    = $('pdf-cedula').value.trim();
+      const tipoSocio = $('pdf-tipo-socio').value;
+      const apertura  = Number($('pdf-apertura').value) || 0;
+      const asesor    = $('pdf-asesor').value.trim();
+      const telefono  = $('pdf-telefono').value.trim();
+      const destino   = $('pdf-destino').value === 'Otros'
+        ? $('pdf-destino-otros').value.trim()
+        : $('pdf-destino').value;
+
+      if (!nombre)    return (alPdf.textContent = 'Ingrese el nombre del socio.',       alPdf.classList.add('visible'));
+      if (!cedula)    return (alPdf.textContent = 'Ingrese la cédula del socio.',        alPdf.classList.add('visible'));
+      if (!tipoSocio) return (alPdf.textContent = 'Seleccione el tipo de trabajador.',  alPdf.classList.add('visible'));
+      if (!destino)   return (alPdf.textContent = 'Seleccione el destino del crédito.', alPdf.classList.add('visible'));
+      if (!asesor)    return (alPdf.textContent = 'Ingrese el nombre del asesor.',       alPdf.classList.add('visible'));
+
+      const data = JSON.parse(localStorage.getItem('loanData') || '{}');
+      if (!data.amount) return (alPdf.textContent = 'Calcule primero la cotización.', alPdf.classList.add('visible'));
+
+      const btn = $('confirmarPDF');
+      btn.disabled = true; btn.textContent = 'Generando…';
+
+      try {
+        const pdfData = {
+          nombre, cedula, tipo_socio: tipoSocio, apertura,
+          destino, asesor, telefono,
+          con_garante: data.conGarante || false,
+        };
+
+        if (window.pywebview) {
+          if (!window.pywebview.api) {
+            await new Promise(r => window.addEventListener('pywebviewready', r, { once: true }));
+          }
+          const res = await window.pywebview.api.generar_pdf({ ...data, ...pdfData });
+          if (res.ok) cerrarModal();
+          else { alPdf.textContent = `Error: ${res.error}`; alPdf.classList.add('visible'); }
+        } else {
+          localStorage.setItem('pdfData', JSON.stringify(pdfData));
+          cerrarModal();
+          window.location.href = 'cotizacion.html';
+        }
+      } catch (err) {
+        alPdf.textContent = 'Error inesperado al generar el PDF.';
+        alPdf.classList.add('visible');
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg> Generar PDF`;
+      }
+    });
+  </script>
+</body>
+</html>

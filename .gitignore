@@ -1,0 +1,23 @@
+# PDFs generados
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Claude Code (local)
+.claude/
+.agents/
+skills-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Entornos virtuales
+venv/
+.env
