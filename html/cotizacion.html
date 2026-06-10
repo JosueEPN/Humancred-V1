@@ -166,11 +166,63 @@
     .btn-imprime { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
     .btn-back    { background: transparent; color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.2); }
 
+    /* ── Garante full section (página 2) ── */
+    .gf-page { padding-top: 4mm; }
+    .gf-header { border-bottom: 2px solid var(--vino); padding-bottom: 5px; margin-bottom: 8px; }
+    .gf-title  { font-size: 10.5pt; font-weight: 800; color: var(--vino); letter-spacing: -0.01em; }
+    .gf-sub    { font-size: 7pt; color: var(--gris-500); margin-top: 1px; }
+
+    .gf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+
+    .gf-cat       { margin-bottom: 7px; }
+    .gf-cat-hdr   {
+      font-size: 6.5pt; font-weight: 800; color: #fff; background: var(--vino);
+      padding: 3px 7px; text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 3px; border-radius: 2px;
+    }
+    .gf-list { list-style: none; padding: 0 0 0 4px; display: flex; flex-direction: column; }
+    .gf-list li {
+      font-size: 7pt; color: var(--gris-700);
+      padding: 1.5px 0 1.5px 10px; position: relative;
+      line-height: 1.3; border-bottom: 1px dotted var(--gris-200);
+    }
+    .gf-list li:last-child { border-bottom: none; }
+    .gf-list li::before {
+      content: '·'; color: var(--vino); font-weight: 900; font-size: 12pt;
+      position: absolute; left: 0; top: -1px; line-height: 1.1;
+    }
+
+    .gf-cond     { border: 1.5px solid var(--beige); border-radius: 4px; overflow: hidden; }
+    .gf-cond-hdr {
+      font-size: 6.5pt; font-weight: 800; color: #fff; background: var(--vino-dark);
+      padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .gf-cond-list { list-style: none; padding: 3px 8px; display: flex; flex-direction: column; }
+    .gf-cond-list li {
+      font-size: 7pt; color: var(--gris-700);
+      display: flex; align-items: flex-start; gap: 5px;
+      padding: 3px 0; border-bottom: 1px dotted var(--gris-200); line-height: 1.3;
+    }
+    .gf-cond-list li:last-child { border-bottom: none; }
+    .gf-check { color: var(--vino); font-weight: 800; font-size: 8pt; flex-shrink: 0; min-width: 10px; line-height: 1.3; }
+
+    .gf-nota {
+      background: var(--vino); color: #fff;
+      padding: 7px 12px; font-size: 7.5pt; border-radius: 4px;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .gf-nota-badge {
+      background: rgba(255,255,255,0.2); border-radius: 50%;
+      width: 18px; height: 18px; min-width: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 9.5pt; flex-shrink: 0; line-height: 1;
+    }
+
     @page { size: A4; margin: 0; }
     @media print {
       body { background: none; }
       .print-bar { display: none; }
-      .doc { margin: 0; box-shadow: none; padding: 14mm 16mm 12mm; min-height: 297mm; width: 100%; }
+      .doc { margin: 0; box-shadow: none; padding: 9mm 13mm 8mm; min-height: 297mm; width: 100%; }
     }
   </style>
 </head>
@@ -329,6 +381,74 @@
         Valores sujetos a aprobación y verificación de requisitos. · Humancred — Avanza con confianza
       </div>
     </div>
+
+    <!-- GARANTE FULL — página 2 cuando hay garante -->
+    <div class="gf-page" id="garante-full-section" style="display:none;">
+      <div class="gf-header">
+        <div class="gf-title">Requisitos para el Garante</div>
+        <div class="gf-sub">Tu respaldo, su confianza — documentación y condiciones requeridas</div>
+      </div>
+
+      <div class="gf-grid">
+        <!-- Columna izquierda: documentos por categoría -->
+        <div>
+          <div class="gf-cat">
+            <div class="gf-cat-hdr">1. Documentos Personales</div>
+            <ul class="gf-list">
+              <li>Copia de cédula de identidad</li>
+              <li>Copia de papeleta de votación</li>
+              <li>Copia de servicio básico (agua, luz o teléfono) actualizado</li>
+            </ul>
+          </div>
+          <div class="gf-cat">
+            <div class="gf-cat-hdr">2. Si es Empleado (Dependiente)</div>
+            <ul class="gf-list">
+              <li>Certificado laboral actualizado</li>
+              <li>Tres últimos roles de pago</li>
+              <li>Movimientos bancarios de los últimos 3 meses</li>
+            </ul>
+          </div>
+          <div class="gf-cat">
+            <div class="gf-cat-hdr">3. Si es Independiente</div>
+            <ul class="gf-list">
+              <li>RUC o RIMPE (si aplica)</li>
+              <li>Declaración de ingresos</li>
+              <li>Movimientos bancarios de los últimos 3 meses</li>
+              <li>Documentos que respalden su actividad económica</li>
+            </ul>
+          </div>
+          <div class="gf-cat">
+            <div class="gf-cat-hdr">4. Respaldo Patrimonial</div>
+            <ul class="gf-list">
+              <li>Copia de matrícula de vehículo</li>
+              <li>Copia de impuesto predial o escritura de bienes inmuebles (Certificado degravamen)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Columna derecha: condiciones generales -->
+        <div class="gf-cond">
+          <div class="gf-cond-hdr">Condiciones Generales para el Garante</div>
+          <ul class="gf-cond-list">
+            <li><span class="gf-check">✓</span><span>Ser mayor de edad</span></li>
+            <li><span class="gf-check">✓</span><span>Mantener una calificación crediticia <strong>AAA</strong> o equivalente</span></li>
+            <li><span class="gf-check">✓</span><span>Demostrar ingresos estables y capacidad de pago</span></li>
+            <li><span class="gf-check">✓</span><span>Poseer bienes o patrimonio que respalden la obligación, cuyo valor <strong>supere el monto solicitado</strong></span></li>
+            <li><span class="gf-check">✓</span><span>No registrar obligaciones vencidas ni problemas significativos en el historial crediticio</span></li>
+            <li><span class="gf-check">✓</span><span>Contar con estabilidad laboral o económica comprobable</span></li>
+            <li><span class="gf-check">✓</span><span>Presentar la documentación requerida para la evaluación crediticia</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="gf-nota">
+        <div class="gf-nota-badge">!</div>
+        <div>
+          <strong>IMPORTANTE:</strong> El garante asume la responsabilidad de responder por la deuda en caso de incumplimiento del titular del crédito.
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -427,10 +547,7 @@
     // Desgravamen
     const desgEl = document.getElementById('c-desgravamen');
     if (loan.desgravamenActivo) {
-      const modeLabel = loan.desgravamenMode === 'descuento'
-        ? 'Descontado del desembolso'
-        : 'Cobrado en cuotas';
-      desgEl.textContent = `$ ${fmt(loan.desgravamenAmount)} · ${modeLabel}`;
+      desgEl.textContent = `$ ${fmt(loan.desgravamenAmount)} · Descontado del desembolso`;
       desgEl.className = 'dg-value val-vino';
     } else {
       desgEl.textContent = 'No incluido';
@@ -456,34 +573,48 @@
       : `Requisitos — ${tipoSolicitud}`);
     renderReqs('req-sol-list', tipoSolicitud);
 
+    // req-container: siempre 1 columna — el garante va completo en página 2
     const garanteBox   = document.getElementById('req-garante-box');
     const reqContainer = document.getElementById('req-container');
-    if (garanteBox)   garanteBox.style.display = conGarante ? '' : 'none';
-    if (reqContainer) reqContainer.style.gridTemplateColumns = conGarante ? '1fr 1fr' : '1fr';
-    if (conGarante)   renderReqs('req-gar-list', 'Dependiente');
+    if (garanteBox)   garanteBox.style.display = 'none';
+    if (reqContainer) reqContainer.style.gridTemplateColumns = '1fr';
+
+    // Sección garante (página 2)
+    const garanteFullSection = document.getElementById('garante-full-section');
+    if (garanteFullSection) garanteFullSection.style.display = conGarante ? 'block' : 'none';
 
     // Guardar PDF
     function guardarPDF() {
-      const btn = document.getElementById('btnGuardar');
+      const btn   = document.getElementById('btnGuardar');
+      const docEl = document.getElementById('doc');
       btn.disabled = true;
       btn.innerHTML = '⏳ Generando…';
+
+      // Eliminar min-height para evitar página en blanco al final
+      docEl.style.minHeight = '0';
 
       const nombreArchivo = (pdfD.nombre || 'cotizacion')
         .replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
 
+      const opts = {
+        margin:      0,
+        filename:    `Cotizacion_Humancred_${nombreArchivo}.pdf`,
+        image:       { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      };
+      // Cuando hay garante, forzar salto de página antes de la sección
+      if (conGarante) {
+        opts.pagebreak = { before: '#garante-full-section' };
+      }
+
       window.scrollTo(0, 0);
       html2pdf()
-        .set({
-          margin:      0,
-          filename:    `Cotizacion_Humancred_${nombreArchivo}.pdf`,
-          image:       { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
-          jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:   { mode: 'avoid-all' },
-        })
-        .from(document.getElementById('doc'))
+        .set(opts)
+        .from(docEl)
         .save()
         .then(() => {
+          docEl.style.minHeight = '';  // restaurar
           btn.disabled = false;
           btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Guardar PDF`;
         });

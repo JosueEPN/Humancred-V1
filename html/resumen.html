@@ -380,19 +380,9 @@
               <input type="checkbox" id="desgravamen-s" checked
                      style="accent-color:var(--vino);width:14px;height:14px;flex-shrink:0;" />
               <span style="font-size:var(--texto-xs);color:var(--gris-500);font-weight:500;">
-                Seguro de desgravamen — 2.5%
+                Seguro de desgravamen — 2.5% (se descuenta del monto)
               </span>
             </label>
-            <div id="desgravamen-mode-wrap-s" style="display:flex;gap:0.4rem;margin-top:0.3rem;">
-              <input type="radio" name="desgravamen-mode-s" id="desg-cuotas-s"
-                     value="cuotas" class="pill-option" checked />
-              <label for="desg-cuotas-s" class="pill-label"
-                     style="font-size:0.62rem;padding:0.3rem 0;">Cobrar en cuotas</label>
-              <input type="radio" name="desgravamen-mode-s" id="desg-descuento-s"
-                     value="descuento" class="pill-option" />
-              <label for="desg-descuento-s" class="pill-label"
-                     style="font-size:0.62rem;padding:0.3rem 0;">Descontar del monto</label>
-            </div>
           </div>
 
           <div class="form-group" style="margin-bottom:0.5rem;">
@@ -700,10 +690,7 @@
 
       const desgEl = $('desgravamen-status');
       if (data.desgravamenActivo) {
-        const modeText = data.desgravamenMode === 'descuento'
-          ? 'Descontado del desembolso'
-          : 'Incluido en cuotas';
-        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · ${modeText}`;
+        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · Descontado del desembolso`;
         desgEl.className = 'metric-val aplica';
       } else {
         desgEl.textContent = 'No incluido';
@@ -787,10 +774,6 @@
       const encRadio = document.querySelector(`input[name="encaje-s"][value="${encVal}"]`);
       if (encRadio) encRadio.checked = true;
       $('desgravamen-s').checked = loanData.desgravamenActivo !== false;
-      const modeS = loanData.desgravamenMode || 'cuotas';
-      const modeRadio = document.querySelector(`input[name="desgravamen-mode-s"][value="${modeS}"]`);
-      if (modeRadio) modeRadio.checked = true;
-      $('desgravamen-mode-wrap-s').style.display = loanData.desgravamenActivo !== false ? 'flex' : 'none';
       if (loanData.conGarante) $('garante-s').checked = true;
       cargarTasas(loanData.creditType, String(loanData.interest));
       cargarPlazos(loanData.creditType, loanData.term);
@@ -798,10 +781,6 @@
     }
 
     // Eventos
-    $('desgravamen-s').addEventListener('change', () => {
-      $('desgravamen-mode-wrap-s').style.display = $('desgravamen-s').checked ? 'flex' : 'none';
-    });
-
     $('credito-s').addEventListener('change', () => {
       $('monto-s').value = '';
       $('alerta').textContent = ''; $('alerta').classList.remove('visible');
@@ -828,8 +807,7 @@
       const tasa        = $('tasa-s').value === 'Otros'
         ? Number($('tasa-otros').value) : Number($('tasa-s').value);
       const encaje      = Number(document.querySelector('input[name="encaje-s"]:checked')?.value || 8);
-      const desgravamen     = $('desgravamen-s').checked;
-      const desgravamenMode = document.querySelector('input[name="desgravamen-mode-s"]:checked')?.value || 'cuotas';
+      const desgravamen = $('desgravamen-s').checked;
       const conGarante  = $('garante-s').checked;
       const plazo       = $('plazo-s').value === 'custom'
         ? Number($('plazo-custom').value) : Number($('plazo-s').value);
@@ -840,7 +818,7 @@
         return;
       }
 
-      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen, desgravamenMode);
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
       data.conGarante = conGarante;
       localStorage.setItem('loanData', JSON.stringify(data));
       actualizarUI(data);

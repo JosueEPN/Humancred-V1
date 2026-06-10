@@ -31,7 +31,7 @@ function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, d
         : getInteres(creditType);
     if (typeof interest === 'string') interest = parseFloat(interest);
 
-    const mode            = desgravamenActivo ? (desgravamenMode || 'cuotas') : 'cuotas';
+    const mode            = desgravamenActivo ? (desgravamenMode || 'descuento') : 'descuento';
     const desgravamenAmount = desgravamenActivo ? amount * 0.025 : 0;
 
     let financedAmount, netAmount;

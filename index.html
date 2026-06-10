@@ -386,18 +386,8 @@
         <div class="form-group" style="margin-bottom:0.5rem;">
           <label class="toggle-group" for="desgravamen-toggle">
             <input type="checkbox" id="desgravamen-toggle" checked />
-            <span class="toggle-label">Incluir seguro de desgravamen &mdash; 2.5%</span>
+            <span class="toggle-label">Incluir seguro de desgravamen &mdash; 2.5% (se descuenta del monto)</span>
           </label>
-          <div id="desgravamen-mode-wrap" style="display:flex;gap:0.4rem;margin-top:0.3rem;">
-            <input type="radio" name="desgravamen-mode" id="desg-cuotas"
-                   value="cuotas" class="pill-option" checked />
-            <label for="desg-cuotas" class="pill-label"
-                   style="font-size:0.62rem;padding:0.3rem 0;">Cobrar en cuotas</label>
-            <input type="radio" name="desgravamen-mode" id="desg-descuento"
-                   value="descuento" class="pill-option" />
-            <label for="desg-descuento" class="pill-label"
-                   style="font-size:0.62rem;padding:0.3rem 0;">Descontar del monto</label>
-          </div>
         </div>
 
         <!-- Solicitar con Garante -->
@@ -493,10 +483,6 @@
       sel.appendChild(oc);
     }
 
-    $('desgravamen-toggle').addEventListener('change', () => {
-      $('desgravamen-mode-wrap').style.display = $('desgravamen-toggle').checked ? 'flex' : 'none';
-    });
-
     $('credito').addEventListener('change', () => {
       const tipo = $('credito').value;
       $('monto').value = '';
@@ -530,8 +516,7 @@
       const monto  = Number($('monto').value);
       const tasa   = $('tasa').value === 'Otros' ? Number($('tasa-otros').value) : Number($('tasa').value);
       const encaje = Number(document.querySelector('input[name="encaje"]:checked')?.value || 8);
-      const desgravamen     = $('desgravamen-toggle').checked;
-      const desgravamenMode = document.querySelector('input[name="desgravamen-mode"]:checked')?.value || 'cuotas';
+      const desgravamen = $('desgravamen-toggle').checked;
       const conGarante  = $('garante-toggle').checked;
       const plazo  = $('plazo').value === 'custom' ? Number($('plazo-custom').value) : Number($('plazo').value);
 
@@ -546,7 +531,7 @@
         return mostrarAlerta(`${nombre}: monto entre $${lim.min.toLocaleString('es-ES')} y $${lim.max.toLocaleString('es-ES')}.`);
       }
 
-      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen, desgravamenMode);
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
       data.conGarante = conGarante;
       localStorage.setItem('loanData', JSON.stringify(data));
       window.location.href = 'html/resumen.html';
