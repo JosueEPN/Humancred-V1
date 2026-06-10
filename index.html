@@ -46,11 +46,13 @@
     }
 
     .brand-logo {
-      height: 72px;
+      height: 160px;
       width: auto;
+      max-width: 100%;
+      display: block;
       object-fit: contain;
-      object-position: left;
-      margin-bottom: 2.5rem;
+      object-position: center;
+      margin: 0 auto 2rem;
     }
 
     .brand-content { flex: 1; }
@@ -226,7 +228,7 @@
         align-items: center;
         gap: 1rem;
       }
-      .brand-logo { height: 52px; margin-bottom: 0; flex-shrink: 0; }
+      .brand-logo { height: 56px; width: auto; margin: 0; display: block; object-position: center; flex-shrink: 0; }
       .brand-content { flex: 1; }
       .brand-eyebrow { display: none; }
       .brand-headline { font-size: 1rem; margin-bottom: 0; }
