@@ -22,15 +22,21 @@
     .sidebar {
       background: #fff;
       border-right: 1px solid #EAEAEA;
-      padding: 1.5rem 1.25rem;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 0;
       position: sticky;
       top: 0;
       align-self: start;
       height: calc(100vh - var(--header-h) - var(--footer-h));
-      overflow-y: hidden;
+      overflow: hidden;
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1.5rem 1.25rem 0.5rem;
     }
 
     .sidebar-label {
@@ -45,8 +51,8 @@
     .sidebar .form-group { margin-bottom: 0.75rem; }
 
     .sidebar-actions {
-      margin-top: auto;
-      padding-top: 1rem;
+      flex-shrink: 0;
+      padding: 1rem 1.25rem;
       border-top: 1px solid #EAEAEA;
       display: flex;
       flex-direction: column;
@@ -252,7 +258,17 @@
     /* ── Responsive ── */
     @media (max-width: 960px) {
       .resumen-layout { grid-template-columns: 1fr; }
-      .sidebar { border-right: none; border-bottom: 1px solid #EAEAEA; }
+      .sidebar {
+        position: static;
+        height: auto;
+        overflow: visible;
+        border-right: none;
+        border-bottom: 1px solid #EAEAEA;
+      }
+      .sidebar-scroll {
+        overflow-y: visible;
+        max-height: none;
+      }
     }
 
     @media (max-width: 768px) {
@@ -309,6 +325,7 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar fade-up">
+          <div class="sidebar-scroll">
           <p class="sidebar-label">Ajustar cotización</p>
 
           <div class="form-group">
@@ -363,9 +380,19 @@
               <input type="checkbox" id="desgravamen-s" checked
                      style="accent-color:var(--vino);width:14px;height:14px;flex-shrink:0;" />
               <span style="font-size:var(--texto-xs);color:var(--gris-500);font-weight:500;">
-                Seguro de desgravamen — 2.5% (se suma al monto)
+                Seguro de desgravamen — 2.5%
               </span>
             </label>
+            <div id="desgravamen-mode-wrap-s" style="display:flex;gap:0.4rem;margin-top:0.3rem;">
+              <input type="radio" name="desgravamen-mode-s" id="desg-cuotas-s"
+                     value="cuotas" class="pill-option" checked />
+              <label for="desg-cuotas-s" class="pill-label"
+                     style="font-size:0.62rem;padding:0.3rem 0;">Cobrar en cuotas</label>
+              <input type="radio" name="desgravamen-mode-s" id="desg-descuento-s"
+                     value="descuento" class="pill-option" />
+              <label for="desg-descuento-s" class="pill-label"
+                     style="font-size:0.62rem;padding:0.3rem 0;">Descontar del monto</label>
+            </div>
           </div>
 
           <div class="form-group" style="margin-bottom:0.5rem;">
@@ -380,6 +407,7 @@
 
           <div id="alerta" class="alert alert-error" style="margin-bottom:0.5rem;"></div>
 
+          </div><!-- /sidebar-scroll -->
           <div class="sidebar-actions">
             <button id="btnRecalcular" class="btn-sidebar primary">Recalcular</button>
             <button id="btnTablaAmortizacion" class="btn-sidebar neutral">Tabla de amortización</button>
@@ -606,7 +634,7 @@
     </div>
   </div>
 
-  <script src="../js/calculator.js?v=4"></script>
+  <script src="../js/calculator.js?v=5"></script>
   <script>
     const $ = id => document.getElementById(id);
 
@@ -672,7 +700,10 @@
 
       const desgEl = $('desgravamen-status');
       if (data.desgravamenActivo) {
-        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · Incluido en préstamo`;
+        const modeText = data.desgravamenMode === 'descuento'
+          ? 'Descontado del desembolso'
+          : 'Incluido en cuotas';
+        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · ${modeText}`;
         desgEl.className = 'metric-val aplica';
       } else {
         desgEl.textContent = 'No incluido';
@@ -742,7 +773,8 @@
       const prevConGarante = loanData.conGarante || false;
       loanData = calculateLoan(
         loanData.creditType, loanData.amount, loanData.term,
-        loanData.interest, loanData.encajeRate, loanData.desgravamenActivo
+        loanData.interest, loanData.encajeRate, loanData.desgravamenActivo,
+        loanData.desgravamenMode || 'cuotas'
       );
       loanData.conGarante = prevConGarante;
       localStorage.setItem('loanData', JSON.stringify(loanData));
@@ -755,6 +787,10 @@
       const encRadio = document.querySelector(`input[name="encaje-s"][value="${encVal}"]`);
       if (encRadio) encRadio.checked = true;
       $('desgravamen-s').checked = loanData.desgravamenActivo !== false;
+      const modeS = loanData.desgravamenMode || 'cuotas';
+      const modeRadio = document.querySelector(`input[name="desgravamen-mode-s"][value="${modeS}"]`);
+      if (modeRadio) modeRadio.checked = true;
+      $('desgravamen-mode-wrap-s').style.display = loanData.desgravamenActivo !== false ? 'flex' : 'none';
       if (loanData.conGarante) $('garante-s').checked = true;
       cargarTasas(loanData.creditType, String(loanData.interest));
       cargarPlazos(loanData.creditType, loanData.term);
@@ -762,6 +798,10 @@
     }
 
     // Eventos
+    $('desgravamen-s').addEventListener('change', () => {
+      $('desgravamen-mode-wrap-s').style.display = $('desgravamen-s').checked ? 'flex' : 'none';
+    });
+
     $('credito-s').addEventListener('change', () => {
       $('monto-s').value = '';
       $('alerta').textContent = ''; $('alerta').classList.remove('visible');
@@ -788,7 +828,8 @@
       const tasa        = $('tasa-s').value === 'Otros'
         ? Number($('tasa-otros').value) : Number($('tasa-s').value);
       const encaje      = Number(document.querySelector('input[name="encaje-s"]:checked')?.value || 8);
-      const desgravamen = $('desgravamen-s').checked;
+      const desgravamen     = $('desgravamen-s').checked;
+      const desgravamenMode = document.querySelector('input[name="desgravamen-mode-s"]:checked')?.value || 'cuotas';
       const conGarante  = $('garante-s').checked;
       const plazo       = $('plazo-s').value === 'custom'
         ? Number($('plazo-custom').value) : Number($('plazo-s').value);
@@ -799,7 +840,7 @@
         return;
       }
 
-      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen, desgravamenMode);
       data.conGarante = conGarante;
       localStorage.setItem('loanData', JSON.stringify(data));
       actualizarUI(data);

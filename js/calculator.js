@@ -17,12 +17,11 @@ function calculateMonthlyPayment(amount, annualInterest, termInMonths) {
 }
 
 /**
- * Lógica de desgravamen:
- *   - Si activo: financedAmount = amount + (amount * 2.5%)
- *   - El cliente recibe exactamente financedAmount
- *   - Encaje y cuota se calculan sobre financedAmount
+ * Dos modalidades de desgravamen:
+ *   'cuotas'   — 2.5% se SUMA al monto financiado; cuota sube; cliente recibe el monto completo
+ *   'descuento'— 2.5% se DESCUENTA del desembolso; préstamo queda en el monto original; cliente recibe menos
  */
-function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, desgravamenActivo) {
+function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, desgravamenActivo, desgravamenMode) {
     amount     = Number(amount)     || 0;
     term       = Number(term)       || 1;
     encajeRate = Number(encajeRate) || 8;
@@ -32,14 +31,20 @@ function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, d
         : getInteres(creditType);
     if (typeof interest === 'string') interest = parseFloat(interest);
 
-    // Desgravamen se SUMA al monto solicitado
+    const mode            = desgravamenActivo ? (desgravamenMode || 'cuotas') : 'cuotas';
     const desgravamenAmount = desgravamenActivo ? amount * 0.025 : 0;
-    const financedAmount    = amount + desgravamenAmount;
 
-    // Cuota y encaje sobre el monto financiado total
+    let financedAmount, netAmount;
+    if (desgravamenActivo && mode === 'descuento') {
+        financedAmount = amount;                      // préstamo = monto original
+        netAmount      = amount - desgravamenAmount;  // cliente recibe menos
+    } else {
+        financedAmount = amount + desgravamenAmount;  // préstamo sube
+        netAmount      = financedAmount;              // cliente recibe el total
+    }
+
     const monthlyPayment = calculateMonthlyPayment(financedAmount, interest, term);
     const encajeAmount   = financedAmount * (encajeRate / 100);
-    const netAmount      = financedAmount;
 
     return {
         creditType,
@@ -50,6 +55,7 @@ function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, d
         encajeRate,
         encajeAmount,
         desgravamenActivo: !!desgravamenActivo,
+        desgravamenMode:   mode,
         desgravamenAmount,
         netAmount,
         monthlyPayment,
