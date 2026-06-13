@@ -387,10 +387,13 @@
 
         <!-- Seguro de desgravamen -->
         <div class="form-group" style="margin-bottom:0.5rem;">
-          <label class="toggle-group" for="desgravamen-toggle">
-            <input type="checkbox" id="desgravamen-toggle" checked />
-            <span class="toggle-label">Incluir seguro de desgravamen &mdash; 2.5% (se descuenta del monto)</span>
-          </label>
+          <label class="form-label">Seguro de desgravamen &mdash; 2.5% (incluido)</label>
+          <div class="pill-group" id="desgravamen-mode-wrap" style="margin-top:0.5rem;">
+            <input type="radio" name="desgravamen-mode" id="desg-descuento" value="descuento" class="pill-option" checked />
+            <label for="desg-descuento" class="pill-label" style="font-size:var(--texto-xs);">Descontar del monto</label>
+            <input type="radio" name="desgravamen-mode" id="desg-cuotas" value="cuotas" class="pill-option" />
+            <label for="desg-cuotas" class="pill-label" style="font-size:var(--texto-xs);">Sumar a la cuota</label>
+          </div>
         </div>
 
         <!-- Solicitar con Garante -->
@@ -421,7 +424,7 @@
 
   </div>
 
-  <script src="js/calculator.js?v=5"></script>
+  <script src="js/calculator.js?v=6"></script>
   <script>
     const plazosEstandar = {
       Microcredito: [12, 24, 36],
@@ -519,7 +522,7 @@
       const monto  = Number($('monto').value);
       const tasa   = $('tasa').value === 'Otros' ? Number($('tasa-otros').value) : Number($('tasa').value);
       const encaje = Number(document.querySelector('input[name="encaje"]:checked')?.value || 8);
-      const desgravamen = $('desgravamen-toggle').checked;
+      const desgravamenMode = document.querySelector('input[name="desgravamen-mode"]:checked')?.value || 'descuento';
       const conGarante  = $('garante-toggle').checked;
       const plazo  = $('plazo').value === 'custom' ? Number($('plazo-custom').value) : Number($('plazo').value);
 
@@ -534,7 +537,7 @@
         return mostrarAlerta(`${nombre}: monto entre $${lim.min.toLocaleString('es-ES')} y $${lim.max.toLocaleString('es-ES')}.`);
       }
 
-      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamenMode);
       data.conGarante = conGarante;
       localStorage.setItem('loanData', JSON.stringify(data));
       window.location.href = 'html/resumen.html';

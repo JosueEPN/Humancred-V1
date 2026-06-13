@@ -47,6 +47,41 @@
       color: var(--gris-900);
     }
 
+    .costo-total {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--blanco);
+      border: 1px solid #EAEAEA;
+      border-radius: var(--radio-lg);
+      overflow: hidden;
+    }
+
+    .costo-cell {
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      border-right: 1px solid #EAEAEA;
+    }
+
+    .costo-cell:last-child { border-right: none; }
+
+    .costo-cell-label {
+      font-size: var(--texto-xs);
+      font-weight: 500;
+      color: var(--gris-500);
+    }
+
+    .costo-cell-valor {
+      font-size: var(--texto-lg);
+      font-weight: 700;
+      color: var(--gris-900);
+    }
+
+    .costo-cell.highlight { background: var(--vino); }
+    .costo-cell.highlight .costo-cell-label { color: rgba(255,255,255,0.75); }
+    .costo-cell.highlight .costo-cell-valor { color: var(--blanco); }
+
     .amort-table {
       width: 100%;
       border-collapse: collapse;
@@ -129,6 +164,10 @@
       .resumen-cell:nth-child(-n+3) { border-bottom: 1px solid #EAEAEA; }
       .resumen-cell:nth-child(2n) { border-right: none; }
       .resumen-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+      .costo-total { grid-template-columns: 1fr; }
+      .costo-cell { border-right: none; border-bottom: 1px solid #EAEAEA; }
+      .costo-cell:last-child { border-bottom: none; }
     }
   </style>
 </head>
@@ -187,6 +226,17 @@
           </div>
         </div>
 
+        <div class="costo-total fade-up">
+          <div class="costo-cell">
+            <span class="costo-cell-label">Total de intereses a pagar</span>
+            <span class="costo-cell-valor" id="res-total-interes">—</span>
+          </div>
+          <div class="costo-cell highlight">
+            <span class="costo-cell-label">Total a pagar (capital + interés)</span>
+            <span class="costo-cell-valor" id="res-total-pagar">—</span>
+          </div>
+        </div>
+
         <div class="card fade-up" style="padding:0; overflow:hidden;">
           <div class="table-wrapper" style="border-radius:var(--radio-xl); border:none;">
             <table class="amort-table">
@@ -229,9 +279,20 @@
         'No hay datos disponibles. Vuelva al cotizador.' +
         '</td></tr>';
     } else {
-      const { amount, interest, term, monthlyPayment, encajeAmount, financedAmount } = data;
-      const capital0    = financedAmount || amount;
-      const monthlyRate = Math.pow(1 + interest / 100, 1 / 12) - 1;
+      const {
+        amount, interest, term, monthlyPayment, baseMonthlyPayment, encajeAmount, financedAmount,
+        desgravamenMode, desgravamenAmount, desgravamenMonthly,
+      } = data;
+      const capital0  = financedAmount || amount;
+      const cuotaBase = baseMonthlyPayment || monthlyPayment;
+
+      // Tasa efectiva anual -> mensual (NO BORRAR, referencia):
+      // const monthlyRate = Math.pow(1 + interest / 100, 1 / 12) - 1;
+
+      // Tasa nominal anual -> mensual:
+      const monthlyRate = interest / 100 / 12;
+
+      const showSeguro = desgravamenMode === 'cuotas';
 
       document.getElementById('res-monto').textContent   = `$ ${fmt(capital0)}`;
       document.getElementById('res-interes').textContent = `${interest}%`;
@@ -240,14 +301,22 @@
       document.getElementById('res-neto').textContent    = `$ ${fmt(encajeAmount)}`;
       document.getElementById('res-total').textContent   = `$ ${fmt(capital0)}`;
 
+      if (showSeguro) {
+        const headRow = document.querySelector('.amort-table thead tr');
+        const th = document.createElement('th');
+        th.textContent = 'Seguro';
+        headRow.insertBefore(th, headRow.children[4]);
+      }
+
       const tbody = document.getElementById('tabla-body');
-      let capital = capital0, capitalAmortizado = 0;
+      let capital = capital0, capitalAmortizado = 0, totalInteres = 0;
 
       for (let i = 1; i <= term; i++) {
         const interesMes   = capital * monthlyRate;
-        const amortizacion = monthlyPayment - interesMes;
+        const amortizacion = cuotaBase - interesMes;
         capital           -= amortizacion;
         capitalAmortizado += amortizacion;
+        totalInteres      += interesMes;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -255,11 +324,17 @@
           <td>$ ${fmt(monthlyPayment)}</td>
           <td>$ ${fmt(interesMes)}</td>
           <td>$ ${fmt(amortizacion)}</td>
+          ${showSeguro ? `<td>$ ${fmt(desgravamenMonthly)}</td>` : ''}
           <td>$ ${fmt(Math.max(0, capital))}</td>
           <td>$ ${fmt(capitalAmortizado)}</td>
         `;
         tbody.appendChild(tr);
       }
+
+      const totalPagar = capital0 + totalInteres + (showSeguro ? desgravamenAmount : 0);
+
+      document.getElementById('res-total-interes').textContent = `$ ${fmt(totalInteres)}`;
+      document.getElementById('res-total-pagar').textContent   = `$ ${fmt(totalPagar)}`;
     }
   </script>
 </body>

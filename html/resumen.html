@@ -208,8 +208,8 @@
     }
     .benefit-icon svg { width: 15px; height: 15px; stroke: var(--vino); }
     .benefit-text { display: flex; flex-direction: column; gap: 0.2rem; }
-    .benefit-title { font-size: var(--texto-xs); font-weight: 700; color: var(--gris-900); }
-    .benefit-desc  { font-size: 0.7rem; font-weight: 400; color: var(--gris-500); line-height: 1.5; }
+    .benefit-title { font-size: 0.832rem; font-weight: 700; color: var(--gris-900); }
+    .benefit-desc  { font-size: 0.847rem; font-weight: 400; color: var(--gris-500); line-height: 1.5; }
 
     /* ── Sección requisitos ── */
     .req-section {
@@ -225,14 +225,14 @@
       align-items: baseline;
       gap: 0.75rem;
     }
-    .req-section-title { font-size: var(--texto-sm); font-weight: 700; color: var(--gris-900); }
-    .req-section-sub   { font-size: 0.68rem; color: var(--gris-500); }
+    .req-section-title { font-size: 0.894rem; font-weight: 700; color: var(--gris-900); }
+    .req-section-sub   { font-size: 0.823rem; color: var(--gris-500); }
     .req-grid { display: grid; grid-template-columns: 1fr 1fr; }
     .req-col  { border-right: 1px solid #EAEAEA; }
     .req-col:last-child { border-right: none; }
     .req-col-header {
       padding: 0.45rem 1rem;
-      font-size: 0.65rem;
+      font-size: 0.9rem;
       font-weight: 800;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -244,14 +244,14 @@
     .req-list-ui li {
       display: flex; align-items: flex-start; gap: 0.5rem;
       padding: 0.35rem 0; border-bottom: 1px solid #F5F4F1;
-      font-size: var(--texto-xs); color: var(--gris-700); line-height: 1.45;
+      font-size: 0.95rem; color: var(--gris-700); line-height: 1.45;
     }
     .req-list-ui li:last-child { border-bottom: none; }
     .req-num {
-      min-width: 16px; height: 16px;
+      min-width: 18px; height: 18px;
       background: #F5F2EE; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.58rem; font-weight: 700; color: var(--vino);
+      font-size: 0.8rem; font-weight: 700; color: var(--vino);
       flex-shrink: 0; margin-top: 1px;
     }
 
@@ -376,13 +376,15 @@
           </div>
 
           <div class="form-group">
-            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;" for="desgravamen-s">
-              <input type="checkbox" id="desgravamen-s" checked
-                     style="accent-color:var(--vino);width:14px;height:14px;flex-shrink:0;" />
-              <span style="font-size:var(--texto-xs);color:var(--gris-500);font-weight:500;">
-                Seguro de desgravamen — 2.5% (se descuenta del monto)
-              </span>
-            </label>
+            <span style="display:block;font-size:var(--texto-xs);color:var(--gris-500);font-weight:500;">
+              Seguro de desgravamen — 2.5% (incluido)
+            </span>
+            <div class="pill-group" id="desgravamen-mode-wrap-s" style="margin-top:0.5rem;">
+              <input type="radio" name="desgravamen-mode-s" id="desg-descuento-s" value="descuento" class="pill-option" checked />
+              <label for="desg-descuento-s" class="pill-label" style="font-size:var(--texto-xs);">Descontar del monto</label>
+              <input type="radio" name="desgravamen-mode-s" id="desg-cuotas-s" value="cuotas" class="pill-option" />
+              <label for="desg-cuotas-s" class="pill-label" style="font-size:var(--texto-xs);">Sumar a la cuota</label>
+            </div>
           </div>
 
           <div class="form-group" style="margin-bottom:0.5rem;">
@@ -444,7 +446,7 @@
             </div>
             <div class="metric-cell">
               <span class="metric-label">Seguro de desgravamen</span>
-              <span class="metric-val no-aplica" id="desgravamen-status">No incluido</span>
+              <span class="metric-val aplica" id="desgravamen-status">—</span>
             </div>
             <div class="metric-cell key">
               <span class="metric-label">Monto a recibir</span>
@@ -624,7 +626,7 @@
     </div>
   </div>
 
-  <script src="../js/calculator.js?v=5"></script>
+  <script src="../js/calculator.js?v=6"></script>
   <script>
     const $ = id => document.getElementById(id);
 
@@ -689,16 +691,18 @@
       $('aportacion-label').textContent = `Aportación del Socio (${data.encajeRate}%)`;
 
       const desgEl = $('desgravamen-status');
-      if (data.desgravamenActivo) {
-        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · Descontado del desembolso`;
-        desgEl.className = 'metric-val aplica';
+      if (data.desgravamenMode === 'cuotas') {
+        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · +$ ${fmt(data.desgravamenMonthly)}/mes en la cuota`;
       } else {
-        desgEl.textContent = 'No incluido';
-        desgEl.className = 'metric-val no-aplica';
+        desgEl.textContent = `$ ${fmt(data.desgravamenAmount)} · Descontado del desembolso`;
       }
       animateEl(desgEl);
 
-      $('hero-sub').textContent = `${data.term} meses · ${data.interest}% anual · Cuota fija`;
+      let heroSub = `${data.term} meses · ${data.interest}% anual · Cuota fija`;
+      if (data.desgravamenMode === 'cuotas') {
+        heroSub += ' · incluye seguro de desgravamen';
+      }
+      $('hero-sub').textContent = heroSub;
     }
 
     function cargarTasas(tipo, tasaActual) {
@@ -760,8 +764,8 @@
       const prevConGarante = loanData.conGarante || false;
       loanData = calculateLoan(
         loanData.creditType, loanData.amount, loanData.term,
-        loanData.interest, loanData.encajeRate, loanData.desgravamenActivo,
-        loanData.desgravamenMode || 'cuotas'
+        loanData.interest, loanData.encajeRate,
+        loanData.desgravamenMode || 'descuento'
       );
       loanData.conGarante = prevConGarante;
       localStorage.setItem('loanData', JSON.stringify(loanData));
@@ -773,7 +777,9 @@
       const encVal   = loanData.encajeRate || 8;
       const encRadio = document.querySelector(`input[name="encaje-s"][value="${encVal}"]`);
       if (encRadio) encRadio.checked = true;
-      $('desgravamen-s').checked = loanData.desgravamenActivo !== false;
+      const modeVal   = loanData.desgravamenMode || 'descuento';
+      const modeRadio = document.querySelector(`input[name="desgravamen-mode-s"][value="${modeVal}"]`);
+      if (modeRadio) modeRadio.checked = true;
       if (loanData.conGarante) $('garante-s').checked = true;
       cargarTasas(loanData.creditType, String(loanData.interest));
       cargarPlazos(loanData.creditType, loanData.term);
@@ -807,7 +813,7 @@
       const tasa        = $('tasa-s').value === 'Otros'
         ? Number($('tasa-otros').value) : Number($('tasa-s').value);
       const encaje      = Number(document.querySelector('input[name="encaje-s"]:checked')?.value || 8);
-      const desgravamen = $('desgravamen-s').checked;
+      const desgravamenMode = document.querySelector('input[name="desgravamen-mode-s"]:checked')?.value || 'descuento';
       const conGarante  = $('garante-s').checked;
       const plazo       = $('plazo-s').value === 'custom'
         ? Number($('plazo-custom').value) : Number($('plazo-s').value);
@@ -818,7 +824,7 @@
         return;
       }
 
-      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamen);
+      const data = calculateLoan(tipo, monto, plazo, tasa, encaje, desgravamenMode);
       data.conGarante = conGarante;
       localStorage.setItem('loanData', JSON.stringify(data));
       actualizarUI(data);

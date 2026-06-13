@@ -9,7 +9,12 @@ function getInteres(type) {
 }
 
 function calculateMonthlyPayment(amount, annualInterest, termInMonths) {
-    const monthlyRate = Math.pow(1 + annualInterest / 100, 1 / 12) - 1;
+    // Tasa efectiva anual -> tasa efectiva mensual (NO BORRAR, referencia):
+    // const monthlyRate = Math.pow(1 + annualInterest / 100, 1 / 12) - 1;
+
+    // Tasa nominal anual -> tasa nominal mensual (división simple entre 12):
+    const monthlyRate = annualInterest / 100 / 12;
+
     if (!monthlyRate || monthlyRate === 0) return amount / termInMonths;
     const num = monthlyRate * Math.pow(1 + monthlyRate, termInMonths);
     const den = Math.pow(1 + monthlyRate, termInMonths) - 1;
@@ -17,11 +22,12 @@ function calculateMonthlyPayment(amount, annualInterest, termInMonths) {
 }
 
 /**
- * Dos modalidades de desgravamen:
- *   'cuotas'   — 2.5% se SUMA al monto financiado; cuota sube; cliente recibe el monto completo
- *   'descuento'— 2.5% se DESCUENTA del desembolso; préstamo queda en el monto original; cliente recibe menos
+ * El seguro de desgravamen (2.5%) siempre se incluye. El cliente solo elige
+ * la modalidad:
+ *   'descuento' - 2.5% se DESCUENTA del desembolso; el préstamo y la cuota no cambian
+ *   'cuotas'    - 2.5% se reparte entre los meses del plazo y ese valor se SUMA a cada cuota
  */
-function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, desgravamenActivo, desgravamenMode) {
+function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, desgravamenMode) {
     amount     = Number(amount)     || 0;
     term       = Number(term)       || 1;
     encajeRate = Number(encajeRate) || 8;
@@ -31,20 +37,27 @@ function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, d
         : getInteres(creditType);
     if (typeof interest === 'string') interest = parseFloat(interest);
 
-    const mode            = desgravamenActivo ? (desgravamenMode || 'descuento') : 'descuento';
-    const desgravamenAmount = desgravamenActivo ? amount * 0.025 : 0;
+    const mode              = desgravamenMode === 'cuotas' ? 'cuotas' : 'descuento';
+    const desgravamenAmount = amount * 0.025;
 
-    let financedAmount, netAmount;
-    if (desgravamenActivo && mode === 'descuento') {
-        financedAmount = amount;                      // préstamo = monto original
-        netAmount      = amount - desgravamenAmount;  // cliente recibe menos
+    // El préstamo (capital a amortizar) siempre es el monto solicitado
+    const financedAmount    = amount;
+    const baseMonthlyPayment = calculateMonthlyPayment(financedAmount, interest, term);
+
+    let desgravamenMonthly = 0;
+    let monthlyPayment     = baseMonthlyPayment;
+    let netAmount          = amount;
+
+    if (mode === 'cuotas') {
+        // El seguro se reparte entre los meses del plazo y se suma a la cuota
+        desgravamenMonthly = desgravamenAmount / term;
+        monthlyPayment      = baseMonthlyPayment + desgravamenMonthly;
     } else {
-        financedAmount = amount + desgravamenAmount;  // préstamo sube
-        netAmount      = financedAmount;              // cliente recibe el total
+        // 'descuento': se descuenta del desembolso, la cuota no cambia
+        netAmount = amount - desgravamenAmount;
     }
 
-    const monthlyPayment = calculateMonthlyPayment(financedAmount, interest, term);
-    const encajeAmount   = financedAmount * (encajeRate / 100);
+    const encajeAmount = financedAmount * (encajeRate / 100);
 
     return {
         creditType,
@@ -54,9 +67,10 @@ function calculateLoan(creditType, amount, term, selectedInterest, encajeRate, d
         interest,
         encajeRate,
         encajeAmount,
-        desgravamenActivo: !!desgravamenActivo,
-        desgravamenMode:   mode,
+        desgravamenMode: mode,
         desgravamenAmount,
+        desgravamenMonthly,
+        baseMonthlyPayment,
         netAmount,
         monthlyPayment,
     };

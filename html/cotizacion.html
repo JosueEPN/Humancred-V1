@@ -537,7 +537,7 @@
     set('c-tipo-cred-det', TIPO_LABELS[loan.creditType] || loan.creditType || '—');
     set('c-monto',      `$ ${fmt(loan.amount)}`);
     set('c-financiado', `$ ${fmt(loan.financedAmount)}`);
-    set('c-tasa',       `${loan.interest}% anual efectiva`);
+    set('c-tasa',       `${loan.interest}% anual`);
     set('c-plazo',      plazoStr);
     set('c-cuota-det',  `$ ${fmt(loan.monthlyPayment)}`);
     set('c-aportacion-pct', `${loan.encajeRate}%`);
@@ -546,13 +546,12 @@
 
     // Desgravamen
     const desgEl = document.getElementById('c-desgravamen');
-    if (loan.desgravamenActivo) {
-      desgEl.textContent = `$ ${fmt(loan.desgravamenAmount)} · Descontado del desembolso`;
-      desgEl.className = 'dg-value val-vino';
+    if (loan.desgravamenMode === 'cuotas') {
+      desgEl.textContent = `$ ${fmt(loan.desgravamenAmount)} · +$ ${fmt(loan.desgravamenMonthly)}/mes en la cuota`;
     } else {
-      desgEl.textContent = 'No incluido';
-      desgEl.className = 'dg-value val-na';
+      desgEl.textContent = `$ ${fmt(loan.desgravamenAmount)} · Descontado del desembolso`;
     }
+    desgEl.className = 'dg-value val-vino';
 
     // Garante
     const conGarante = loan.conGarante || pdfD.con_garante || false;
